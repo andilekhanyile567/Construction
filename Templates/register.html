@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-header">
+            <i class="fas fa-user-plus"></i>
+            <h2>Create Account</h2>
+            <p>Register to access the Construction Management System</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('register') }}" class="register-form">
+            {% if error %}
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i> {{ error }}
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Username</label>
+                <input type="text" name="username" placeholder="Choose a username" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email Address</label>
+                <input type="email" name="email" placeholder="your@email.com" required>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password</label>
+                <input type="password" name="password" id="password" placeholder="Create a password" required>
+                <small>Password must be at least 6 characters</small>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-check-circle"></i> Confirm Password</label>
+                <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm your password" required>
+                <div id="password-match-message" class="password-hint"></div>
+            </div>
+
+            <button type="submit" class="btn-register">
+                <i class="fas fa-arrow-right"></i> Register
+            </button>
+
+            <div class="login-link">
+                Already have an account? <a href="{{ url_for('login') }}">Login here</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Real-time password confirmation check
+    const password = document.getElementById('password');
+    const confirm = document.getElementById('confirm_password');
+    const messageDiv = document.getElementById('password-match-message');
+
+    function checkPasswordMatch() {
+        if (password.value === confirm.value && password.value !== '') {
+            messageDiv.innerHTML = '<i class="fas fa-check-circle"></i> Passwords match';
+            messageDiv.style.color = '#27ae60';
+        } else if (confirm.value !== '') {
+            messageDiv.innerHTML = '<i class="fas fa-times-circle"></i> Passwords do not match';
+            messageDiv.style.color = '#e74c3c';
+        } else {
+            messageDiv.innerHTML = '';
+        }
+    }
+
+    password.addEventListener('keyup', checkPasswordMatch);
+    confirm.addEventListener('keyup', checkPasswordMatch);
+</script>
+
+<style>
+    .register-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 100px);
+        padding: 2rem;
+    }
+    .register-card {
+        background: white;
+        border-radius: 32px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        max-width: 480px;
+        width: 100%;
+        padding: 2rem;
+        border-top: 5px solid #e67e22;
+    }
+    .register-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .register-header i {
+        font-size: 3rem;
+        color: #e67e22;
+        margin-bottom: 0.5rem;
+    }
+    .register-header h2 {
+        margin: 0.5rem 0;
+        color: #2c2c2c;
+    }
+    .register-header p {
+        color: #777;
+        font-size: 0.9rem;
+    }
+    .register-form .form-group {
+        margin-bottom: 1.2rem;
+    }
+    .register-form label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        color: #2c2c2c;
+    }
+    .register-form label i {
+        margin-right: 6px;
+        color: #e67e22;
+    }
+    .register-form input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: 0.2s;
+    }
+    .register-form input:focus {
+        border-color: #e67e22;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+    }
+    .error-message {
+        background: #fee2e2;
+        border-left: 4px solid #e74c3c;
+        padding: 10px 15px;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        color: #c0392b;
+        font-size: 0.9rem;
+    }
+    .password-hint {
+        font-size: 0.75rem;
+        margin-top: 5px;
+    }
+    small {
+        display: block;
+        font-size: 0.7rem;
+        color: #888;
+        margin-top: 4px;
+    }
+    .btn-register {
+        width: 100%;
+        background: #e67e22;
+        color: white;
+        border: none;
+        padding: 12px;
+        font-size: 1rem;
+        font-weight: bold;
+        border-radius: 40px;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 0.5rem;
+    }
+    .btn-register:hover {
+        background: #f39c12;
+        transform: translateY(-2px);
+    }
+    .login-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.9rem;
+        color: #555;
+    }
+    .login-link a {
+        color: #e67e22;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>MUHLE CONSTRUCTION • Login</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #000000;  /* Solid black background */
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    /* Subtle construction pattern overlay */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.03"><path fill="none" stroke="white" stroke-width="0.5" d="M10 10 L90 10 M10 20 L90 20 M10 30 L90 30 M10 40 L90 40 M10 50 L90 50 M10 60 L90 60 M10 70 L90 70 M10 80 L90 80 M10 90 L90 90 M10 10 L10 90 M20 10 L20 90 M30 10 L30 90 M40 10 L40 90 M50 10 L50 90 M60 10 L60 90 M70 10 L70 90 M80 10 L80 90 M90 10 L90 90"/></svg>');
+      background-repeat: repeat;
+      background-size: 30px;
+      pointer-events: none;
+    }
+
+    /* Main card */
+    .login-container {
+      width: 100%;
+      max-width: 480px;
+      z-index: 2;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    .login-card {
+      background: #111;
+      border-radius: 28px;
+      box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      transition: transform 0.2s;
+      border: 1px solid rgba(255, 165, 0, 0.2);
+    }
+
+    .login-card:hover {
+      transform: translateY(-4px);
+    }
+
+    /* Header with branding */
+    .login-header {
+      background: #0a0a0a;
+      padding: 2rem 2rem 1.5rem;
+      text-align: center;
+      color: white;
+      border-bottom: 1px solid rgba(243, 156, 18, 0.3);
+    }
+
+    .logo-icon {
+      font-size: 2.8rem;
+      color: #f39c12;
+      background: rgba(243, 156, 18, 0.1);
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(243, 156, 18, 0.3);
+    }
+
+    .login-header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 0.25rem;
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .login-header p {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+    }
+
+    /* Body */
+    .login-body {
+      padding: 2rem;
+    }
+
+    /* Error alert */
+    .error-alert {
+      background: rgba(231, 76, 60, 0.15);
+      border-left: 4px solid #e74c3c;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: #e74c3c;
+    }
+
+    .error-alert i {
+      font-size: 1.2rem;
+    }
+
+    /* Form fields */
+    .input-group {
+      margin-bottom: 1.2rem;
+      position: relative;
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #888;
+      font-size: 1.1rem;
+      transition: color 0.2s;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 14px 16px 14px 48px;
+      font-size: 0.95rem;
+      border: 1px solid #333;
+      border-radius: 16px;
+      background: #1a1a1a;
+      color: #fff;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .input-group input:focus {
+      border-color: #f39c12;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.2);
+      background: #222;
+    }
+
+    .input-group input::placeholder {
+      color: #666;
+      font-weight: 400;
+    }
+
+    /* Login button */
+    .login-btn {
+      width: 100%;
+      background: #f39c12;
+      border: none;
+      padding: 14px;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #000;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 1.5rem 0 1rem;
+    }
+
+    .login-btn:hover {
+      background: #e67e22;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+
+    /* Action links */
+    .auth-links {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .auth-link {
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: 0.2s;
+    }
+
+    .forgot-link {
+      color: #aaa;
+    }
+
+    .forgot-link:hover {
+      color: #f39c12;
+    }
+
+    .signup-link {
+      background: rgba(243, 156, 18, 0.15);
+      padding: 8px 16px;
+      border-radius: 40px;
+      color: #f39c12;
+      border: 1px solid rgba(243, 156, 18, 0.3);
+    }
+
+    .signup-link:hover {
+      background: #f39c12;
+      color: #000;
+    }
+
+    /* Footer */
+    .login-footer {
+      background: #0a0a0a;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #777;
+      border-top: 1px solid #222;
+    }
+
+    .login-footer i {
+      margin: 0 4px;
+      color: #f39c12;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-header { padding: 1.5rem; }
+      .login-body { padding: 1.5rem; }
+      .login-header h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo-icon">
+        <i class="fas fa-hard-hat"></i>
+      </div>
+      <h1>MUHLE CONSTRUCTION</h1>
+      <p>Project Management System</p>
+    </div>
+
+    <div class="login-body">
+      <form method="POST" action="{{ url_for('login') }}">
+        {% if error %}
+        <div class="error-alert">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <div class="input-group">
+          <i class="fas fa-user"></i>
+          <input type="text" name="username" placeholder="Username or Email" required autofocus>
+        </div>
+
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input type="password" name="password" placeholder="Password" required>
+        </div>
+
+        <button type="submit" class="login-btn">
+          <i class="fas fa-arrow-right-to-bracket"></i> Sign In
+        </button>
+
+        <div class="auth-links">
+          <a href="{{ url_for('forgot_password') }}" class="auth-link forgot-link">
+            <i class="fas fa-question-circle"></i> Forgot password?
+          </a>
+          <a href="{{ url_for('register') }}" class="auth-link signup-link">
+            <i class="fas fa-user-plus"></i> Create account
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <div class="login-footer">
+      <i class="fas fa-hard-hat"></i> Secure Access  |  <i class="fas fa-shield-alt"></i> MUHLE CONSTRUCTION © 2026
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

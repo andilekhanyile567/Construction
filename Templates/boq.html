@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="boq-container">
+    <h2>📑 BOQ & Cost Estimation</h2>
+    <p class="subtitle">Complete site survey, then generate a fixed‑price quotation</p>
+
+    <form method="POST" enctype="multipart/form-data" class="boq-form">
+        <!-- ========== PART 1: SITE SURVEY & RISK FLAGGING ========== -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-map-marked-alt"></i> Site Survey & Technical Review
+            </div>
+
+            <!-- Step 1 -->
+            <div class="form-step">
+                <div class="step-header">
+                    <span class="step-number">1</span>
+                    <h3>Inspect physical terrain & evaluate existing infrastructure</h3>
+                </div>
+                <div class="step-content">
+                    <div class="form-group">
+                        <label>Terrain description <span class="required">*</span></label>
+                        <textarea name="terrain_inspection" rows="2" placeholder="Slope, accessibility, nearby roads, drainage, existing buildings..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Existing infrastructure assessment</label>
+                        <textarea name="infrastructure_eval" rows="2" placeholder="Water supply, power lines, sewer systems, communication cables, etc."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="form-step">
+                <div class="step-header">
+                    <span class="step-number">2</span>
+                    <h3>Document soil conditions & identify utility access points</h3>
+                </div>
+                <div class="step-content">
+                    <div class="form-group">
+                        <label>Soil type & condition</label>
+                        <input type="text" name="soil_condition" placeholder="e.g., clay, sandy, rocky, high water table">
+                    </div>
+                    <div class="form-group">
+                        <label>Utility access points (water, power, gas, sewer)</label>
+                        <textarea name="utility_access" rows="2" placeholder="Location and distance from site, easements, availability"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="form-step">
+                <div class="step-header">
+                    <span class="step-number">3</span>
+                    <h3>Upload survey report & photos to the portal</h3>
+                </div>
+                <div class="step-content">
+                    <div class="form-group">
+                        <label>Geotechnical / survey report (PDF)</label>
+                        <input type="file" name="survey_report" accept=".pdf">
+                    </div>
+                    <div class="form-group">
+                        <label>Site photos / drone imagery</label>
+                        <input type="file" name="survey_photos" accept="image/*" multiple>
+                        <small>You can upload multiple images</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="form-step">
+                <div class="step-header">
+                    <span class="step-number">4</span>
+                    <h3>Flag technical risks for the Quantity Surveyor</h3>
+                </div>
+                <div class="step-content">
+                    <div class="form-group">
+                        <label>Identified risks</label>
+                        <textarea name="technical_risks" rows="3" placeholder="e.g., unstable slope, poor bearing capacity, utility relocation needed, environmental restrictions..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Recommended mitigation (optional)</label>
+                        <textarea name="risk_mitigation" rows="2" placeholder="Suggestions to reduce or manage risk"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== PART 2: COST ESTIMATION & QUOTATION ========== -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-calculator"></i> Cost Estimation & Fixed‑Price Quotation
+            </div>
+
+            <!-- Step 5 (original 1) -->
+            <div class="form-step">
+                <div class="step-header">
+                    <span class="step-number">5</span>
+                    <h3>Extract material requirements from technical specs</h3>
+                </div>
+                <div class="step-content">
+                    <div class="form-group">
+                        <label>Materials list & quantities <span class="required">*</span></label>
+                        <textarea name="materials" rows="3" placeholder="e.g., Concrete: 120 m³, Steel rebar: 8 tons, Bricks: 5000 units, Paint: 200 L..." required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6 (original 2) -->
+            <div class="form-step">
+                <div class="step-header">
+                    <span class="step-number">6</span>
+                    <h3>Apply internal labour & machinery rates</h3>
+                </div>
+                <div class="step-content">
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Labour cost (USD/day or unit)</label>
+                            <input type="number" name="labour_rate" step="0.01" placeholder="e.g., 250">
+                        </div>
+                        <div class="form-group half">
+                            <label>Machinery / equipment rate</label>
+                            <input type="number" name="machinery_rate" step="0.01" placeholder="e.g., 180">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Other resources (optional)</label>
+                        <input type="text" name="other_resources" placeholder="Subcontractors, special tools, etc.">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7 (original 3) -->
+            <div class="form-step">
+                <div class="step-header">
+                    <span class="step-number">7</span>
+                    <h3>Calculate overheads & contingency margins</h3>
+                </div>
+                <div class="step-content">
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Overheads (%)</label>
+                            <input type="number" name="overhead_percent" step="0.1" placeholder="e.g., 12">
+                        </div>
+                        <div class="form-group half">
+                            <label>Contingency (%)</label>
+                            <input type="number" name="contingency_percent" step="0.1" placeholder="e.g., 8">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 8 (original 4) -->
+            <div class="form-step">
+                <div class="step-header">
+                    <span class="step-number">8</span>
+                    <h3>Generate the final fixed-price quotation</h3>
+                </div>
+                <div class="step-content">
+                    <div class="form-group">
+                        <label>Total cost (base estimate)</label>
+                        <input type="number" name="cost" step="0.01" placeholder="Enter total cost before overheads/contingency">
+                    </div>
+                    <div class="form-group">
+                        <label>Quotation reference (optional)</label>
+                        <input type="text" name="quote_ref" placeholder="e.g., PROJ-2026-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Additional notes for client</label>
+                        <textarea name="quote_notes" rows="2" placeholder="Validity period, payment terms, exclusions, etc."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit button -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-file-invoice-dollar"></i> Generate Fixed‑Price Quotation
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* Consistent styling (same as previous templates) */
+    .boq-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        background: #fff;
+        border-radius: 28px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+        padding: 2rem;
+    }
+    .subtitle {
+        color: #666;
+        margin-bottom: 2rem;
+        border-left: 4px solid #e67e22;
+        padding-left: 1rem;
+    }
+    .form-section {
+        margin-bottom: 3rem;
+        background: #fefaf5;
+        border-radius: 20px;
+        padding: 1.5rem;
+    }
+    .section-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: #2c2c2c;
+        border-bottom: 2px solid #e67e22;
+        display: inline-block;
+        padding-bottom: 0.3rem;
+    }
+    .form-step {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 1.2rem;
+    }
+    .step-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1rem;
+    }
+    .step-number {
+        background: #e67e22;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    .step-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+    }
+    .required {
+        color: #e67e22;
+    }
+    input, textarea, select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-family: inherit;
+        transition: 0.2s;
+    }
+    input:focus, textarea:focus {
+        border-color: #e67e22;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+    }
+    .form-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .half {
+        flex: 1;
+        min-width: 180px;
+    }
+    small {
+        display: block;
+        color: #888;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    .form-actions {
+        margin-top: 2rem;
+        text-align: center;
+    }
+    .btn-primary {
+        background: #e67e22;
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        font-size: 1rem;
+        font-weight: bold;
+        border-radius: 40px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-primary:hover {
+        background: #f39c12;
+        transform: translateY(-2px);
+    }
+    @media (max-width: 700px) {
+        .boq-container { padding: 1rem; }
+        .form-section { padding: 1rem; }
+        .form-row { flex-direction: column; }
+        .step-number { width: 28px; height: 28px; font-size: 0.8rem; }
+    }
+</style>
+{% endblock %}

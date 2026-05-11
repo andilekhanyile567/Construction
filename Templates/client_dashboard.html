@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="client-dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div>
+            <h2><i class="fas fa-user-friends"></i> Client Portal</h2>
+            <p>Manage your projects, agreements, and payments from one place.</p>
+        </div>
+        <div class="header-badge">
+            <span class="badge">Welcome, {{ current_user.username if current_user else 'Client' }}</span>
+        </div>
+    </div>
+
+    <!-- ========== STATS CARDS with safe defaults ========== -->
+    {% set inquiries = inquiries or [] %}
+    {% set agreements = agreements or [] %}
+    {% set payments = payments or [] %}
+    {% set signed_agreements = agreements|selectattr("status", "equalto", "signed")|list %}
+    {% set pending_agreement = agreements|selectattr("status", "equalto", "pending")|first %}
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>{{ inquiries|length }}</h3>
+            <p>Total Inquiries</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-file-signature"></i>
+            <h3>{{ signed_agreements|length }}</h3>
+            <p>Signed Agreements</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-credit-card"></i>
+            <h3>{{ payments|length }}</h3>
+            <p>Payments Made</p>
+        </div>
+    </div>
+
+    <!-- Show a helpful alert if there are inquiries but no pending agreement -->
+    {% if inquiries|length > 0 and not pending_agreement %}
+    <div class="alert-info">
+        <i class="fas fa-info-circle"></i> You have submitted {{ inquiries|length }} project inquiry(ies). Your project manager will prepare a service agreement and send it to you by email. Once received, you can sign it here.
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="actions-grid">
+        <a href="{{ url_for('project_inquiry') }}" class="action-card">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>Project Inquiry</h3>
+            <p>Submit a new project request</p>
+            <span class="action-btn">Start →</span>
+        </a>
+
+        <!-- Sign Agreement card: if pending agreement exists, link to sign; otherwise link to project inquiry -->
+        <a href="{{ url_for('sign_agreement', token=pending_agreement.signature_token) if pending_agreement else url_for('project_inquiry') }}" class="action-card">
+            <i class="fas fa-file-signature"></i>
+            <h3>Sign Agreement</h3>
+            <p>{% if pending_agreement %}Review and sign your pending agreement{% else %}No pending agreements – start a new inquiry{% endif %}</p>
+            <span class="action-btn">{% if pending_agreement %}Sign →{% else %}Inquiry →{% endif %}</span>
+        </a>
+
+        <a href="{{ url_for('payments') }}" class="action-card">
+            <i class="fas fa-credit-card"></i>
+            <h3>Process Payment</h3>
+            <p>Make milestone payments online</p>
+            <span class="action-btn">Pay →</span>
+        </a>
+    </div>
+
+    <!-- All Project Inquiries -->
+    <div class="dashboard-section">
+        <h3><i class="fas fa-history"></i> All Project Inquiries</h3>
+        {% if inquiries %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr><th>Date</th><th>Project Scope</th><th>Location</th><th>Budget (ZAR)</th><th>Status</th><th>Agreement</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    {% for inv in inquiries %}
+                    {% set agreement = agreements|selectattr("inquiry_id", "equalto", inv.id)|first %}
+                    <tr>
+                        <td>{{ inv.timestamp[:10] if inv.timestamp else '—' }}</td>
+                        <td>{{ inv.project_scope[:60] }}{% if inv.project_scope|length > 60 %}...{% endif %}</td>
+                        <td>{{ inv.location }}</td>
+                        <td>R{{ "{:,.2f}".format(inv.budget|float) }}</td>
+                        <td><span class="status-badge {{ inv.status }}">{{ inv.status|replace('_', ' ')|title if inv.status else 'Draft' }}</span></td>
+                        <td>
+                            {% if agreement %}
+                                {% if agreement.status == 'pending' %}
+                                    <a href="{{ url_for('sign_agreement', token=agreement.signature_token) }}" class="btn-sign">Sign Now</a>
+                                {% else %}
+                                    <span class="status-signed">✓ Signed on {{ agreement.signed_at[:10] if agreement.signed_at else '—' }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="status-pending">Not generated</span>
+                            {% endif %}
+                        </td>
+                        <td><a href="{{ url_for('edit_inquiry', inquiry_id=inv.id) }}" class="btn-sign">Edit</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">No inquiries yet. <a href="{{ url_for('project_inquiry') }}">Create your first project inquiry</a>.</p>
+        {% endif %}
+    </div>
+
+    <!-- Signed Agreements -->
+    <div class="dashboard-section">
+        <h3><i class="fas fa-file-signature"></i> Signed Agreements</h3>
+        {% if signed_agreements %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead><tr><th>Contract Title</th><th>Signed Date</th><th>Budget (ZAR)</th><th>Document</th></tr></thead>
+                <tbody>
+                    {% for ag in signed_agreements %}
+                    <tr>
+                        <td>{{ ag.contract_title or (ag.project_scope[:50] if ag.project_scope else 'Agreement') }}</td>
+                        <td>{{ ag.signed_at[:10] if ag.signed_at else '—' }}</td>
+                        <td>R{{ "{:,.2f}".format(ag.budget|float) }}</td>
+                        <td>{% if ag.pm_signed_file %}<a href="{{ url_for('uploaded_file', filename=ag.pm_signed_file) }}" target="_blank">Download PDF</a>{% else %}—{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">No signed agreements yet. Once you sign an agreement, it will appear here.</p>
+        {% endif %}
+    </div>
+
+    <!-- Payment History -->
+    <div class="dashboard-section">
+        <h3><i class="fas fa-receipt"></i> Payment History</h3>
+        {% if payments %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead><tr><th>Date</th><th>Milestone</th><th>Amount (ZAR)</th><th>Method</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for pmt in payments %}
+                    <tr>
+                        <td>{{ pmt.created_at[:10] if pmt.created_at else '—' }}</td>
+                        <td>{{ pmt.milestone }}</td>
+                        <td>R{{ "{:,.2f}".format(pmt.amount|float) }}</td>
+                        <td>{{ pmt.payment_method|replace('_', ' ')|title if pmt.payment_method else '—' }}</td>
+                        <td><span class="status-badge">{{ pmt.status|title if pmt.status else 'Pending' }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">No payments recorded yet. Process your first payment from the “Process Payment” card.</p>
+        {% endif %}
+    </div>
+
+    <!-- Milestone Tracker -->
+    <div class="dashboard-section">
+        <h3><i class="fas fa-chart-line"></i> Project Milestones</h3>
+        <div class="milestone-progress">
+            <div class="milestone-step"><i class="fas fa-check-circle"></i> Inquiry Submitted</div>
+            <div class="milestone-step"><i class="fas fa-check-circle"></i> Agreement Signed</div>
+            <div class="milestone-step"><i class="fas fa-hourglass-half"></i> Payment Initiated</div>
+            <div class="milestone-step"><i class="fas fa-hourglass-half"></i> Project Execution</div>
+            <div class="milestone-step"><i class="fas fa-hourglass-half"></i> Completed</div>
+        </div>
+        <p class="milestone-note">
+            Your latest inquiry is in the 
+            <strong>
+                {% set latest = inquiries|first if inquiries else None %}
+                {% if latest and latest.status == 'agreement_signed' %}
+                    Agreement Signed
+                {% elif latest and latest.status == 'approved' %}
+                    Approved – Awaiting Signature
+                {% elif latest and latest.status == 'pending_review' %}
+                    Pending Review
+                {% else %}
+                    Awaiting Signature
+                {% endif %}
+            </strong> stage.
+        </p>
+    </div>
+</div>
+
+<style>
+    .client-dashboard { max-width: 1300px; margin: 0 auto; }
+    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; }
+    .badge { background: #e67e22; color: white; padding: 8px 16px; border-radius: 40px; font-weight: 600; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: white; border-radius: 24px; padding: 1.5rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .stat-card i { font-size: 2.5rem; color: #e67e22; }
+    .stat-card h3 { font-size: 2rem; margin: 0.5rem 0; }
+    .actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .action-card { background: linear-gradient(145deg, #fffaf2, #fef3e4); border-radius: 24px; padding: 1.5rem; text-decoration: none; color: #2c2c2c; transition: transform 0.2s; border: 1px solid #e2bc7c; }
+    .action-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    .action-card i { font-size: 2rem; color: #e67e22; margin-bottom: 0.5rem; }
+    .action-card h3 { margin: 0.5rem 0; }
+    .action-card p { color: #666; margin-bottom: 1rem; }
+    .action-btn { display: inline-block; background: #e67e22; color: white; padding: 6px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: bold; }
+    .dashboard-section { background: white; border-radius: 24px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .table-responsive { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #eee; }
+    .status-badge { background: #f39c12; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; color: white; }
+    .status-signed { color: #27ae60; font-weight: bold; }
+    .status-pending { color: #e74c3c; }
+    .btn-sign { background: #e67e22; color: white; padding: 4px 12px; border-radius: 20px; text-decoration: none; font-size: 0.75rem; display: inline-block; }
+    .milestone-progress { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; margin: 1rem 0; }
+    .milestone-step { flex: 1; text-align: center; padding: 0.5rem; background: #f8f9fa; border-radius: 12px; font-size: 0.85rem; }
+    .milestone-step i { margin-right: 5px; color: #e67e22; }
+    .milestone-note { font-size: 0.85rem; color: #555; margin-top: 1rem; text-align: center; }
+    .empty-message { text-align: center; color: #888; padding: 2rem; }
+    .alert-info { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 12px; }
+    .alert-info i { font-size: 1.2rem; color: #2196f3; }
+    @media (max-width: 768px) {
+        .milestone-progress { flex-direction: column; }
+        .dashboard-header { flex-direction: column; align-items: start; gap: 0.5rem; }
+        .alert-info { flex-direction: column; text-align: center; }
+    }
+</style>
+{% endblock %}

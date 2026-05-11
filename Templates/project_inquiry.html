@@ -1,0 +1,636 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="inquiry-container">
+    <h2>📋 New Project Inquiry</h2>
+    <p class="subtitle">Advanced AI‑assisted site analysis & detailed project intake</p>
+
+    <form method="POST" enctype="multipart/form-data" class="inquiry-form">
+        <!-- ========== STEP 1: Scope & Location (enhanced) ========== -->
+        <div class="form-step">
+            <div class="step-header">
+                <span class="step-number">1</span>
+                <h3>Project scope & location details</h3>
+            </div>
+            <div class="step-content">
+                <div class="form-group">
+                    <label>Project Scope <span class="required">*</span></label>
+                    <textarea name="project_scope" rows="3" placeholder="Describe the overall goal, deliverables, and key activities..." required>{{ inquiry.project_scope if inquiry else '' }}</textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Project Type</label>
+                        <select name="project_type">
+                            <option value="residential" {% if inquiry and inquiry.project_type == 'residential' %}selected{% endif %}>Residential</option>
+                            <option value="commercial" {% if inquiry and inquiry.project_type == 'commercial' %}selected{% endif %}>Commercial</option>
+                            <option value="industrial" {% if inquiry and inquiry.project_type == 'industrial' %}selected{% endif %}>Industrial</option>
+                            <option value="infrastructure" {% if inquiry and inquiry.project_type == 'infrastructure' %}selected{% endif %}>Infrastructure</option>
+                        </select>
+                    </div>
+                    <div class="form-group half">
+                        <label>Number of floors</label>
+                        <input type="number" name="floors" placeholder="e.g., 5" min="1" value="{{ inquiry.floors if inquiry and inquiry.floors is not none else '' }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Physical Location <span class="required">*</span></label>
+                    <div class="location-search-wrapper">
+                        <input type="text" id="location-input" name="location" placeholder="Start typing address, city, or landmark..." required autocomplete="off" value="{{ inquiry.location if inquiry else '' }}">
+                        <button type="button" id="getCurrentLocationBtn" class="btn-location"><i class="fas fa-location-dot"></i> Use my current location</button>
+                    </div>
+                    <div id="location-suggestions" class="location-suggestions"></div>
+                    <small>Type at least 2 characters for suggestions (cities, towns, suburbs). Click "Use my location" for precise address.</small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Estimated construction area (m²)</label>
+                        <input type="number" name="area_sqm" placeholder="Square meters" step="10" value="{{ inquiry.area_sqm if inquiry and inquiry.area_sqm is not none else '' }}">
+                    </div>
+                    <div class="form-group half">
+                        <label>Soil type (select all that apply)</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label"><input type="checkbox" name="soil_type" value="clay" {% if inquiry and inquiry.soil_type and 'clay' in inquiry.soil_type %}checked{% endif %}> Clay</label>
+                            <label class="checkbox-label"><input type="checkbox" name="soil_type" value="sand" {% if inquiry and inquiry.soil_type and 'sand' in inquiry.soil_type %}checked{% endif %}> Sandy</label>
+                            <label class="checkbox-label"><input type="checkbox" name="soil_type" value="rock" {% if inquiry and inquiry.soil_type and 'rock' in inquiry.soil_type %}checked{% endif %}> Rocky</label>
+                            <label class="checkbox-label"><input type="checkbox" name="soil_type" value="loam" {% if inquiry and inquiry.soil_type and 'loam' in inquiry.soil_type %}checked{% endif %}> Loam</label>
+                            <label class="checkbox-label"><input type="checkbox" name="soil_type" value="peat" {% if inquiry and inquiry.soil_type and 'peat' in inquiry.soil_type %}checked{% endif %}> Peat</label>
+                            <label class="checkbox-label"><input type="checkbox" name="soil_type" value="silt" {% if inquiry and inquiry.soil_type and 'silt' in inquiry.soil_type %}checked{% endif %}> Silt</label>
+                        </div>
+                        <small>Select any combination that matches your site</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== STEP 2: AI ASSISTANCE CAMERA (site photo + area calculation) ========== -->
+        <div class="form-step">
+            <div class="step-header">
+                <span class="step-number">2</span>
+                <h3>AI site scanner – capture & estimate area</h3>
+            </div>
+            <div class="step-content">
+                <div class="ai-camera-box">
+                    <div class="camera-preview">
+                        <video id="videoFeed" autoplay playsinline style="width:100%; max-width:480px; background:#000; border-radius:12px;"></video>
+                        <canvas id="photoCanvas" style="display:none;"></canvas>
+                        <div class="camera-controls">
+                            <button type="button" id="startCameraBtn" class="btn-camera"><i class="fas fa-camera"></i> Open camera</button>
+                            <button type="button" id="capturePhotoBtn" class="btn-camera" disabled><i class="fas fa-image"></i> Capture photo</button>
+                            <button type="button" id="stopCameraBtn" class="btn-camera" disabled><i class="fas fa-stop"></i> Close camera</button>
+                        </div>
+                    </div>
+                    <div class="ai-area-tool">
+                        <label>📐 AI area estimation (assisted)</label>
+                        <div class="form-row">
+                            <div class="form-group half">
+                                <label>Reference length (meters) – e.g., a known object width</label>
+                                <input type="number" id="refLength" step="0.1" placeholder="e.g., 2.0 (m)">
+                            </div>
+                            <div class="form-group half">
+                                <label>Measured pixels of reference (draw on image)</label>
+                                <input type="number" id="refPixels" placeholder="auto after drawing">
+                                <small>Click and drag on captured photo to measure</small>
+                            </div>
+                        </div>
+                        <button type="button" id="estimateAreaBtn" class="btn-ai">🧠 Estimate site area (AI)</button>
+                        <div id="areaResult" class="area-result">Estimated area: — m²</div>
+                        <input type="hidden" name="ai_estimated_area" id="aiAreaField" value="{{ inquiry.ai_estimated_area if inquiry and inquiry.ai_estimated_area is not none else '' }}">
+                        <input type="hidden" name="site_photo_base64" id="sitePhotoBase64" value="">
+                        <p class="info-note">AI simulates area calculation based on reference dimension. After capture, draw a line on the photo to set reference pixels.</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Or upload site photos directly (optional)</label>
+                    <input type="file" name="site_photos" accept="image/*" multiple>
+                    <small>You can still upload traditional images</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== STEP 3: Budget & Timeline (ZAR) ========== -->
+        <div class="form-step">
+            <div class="step-header">
+                <span class="step-number">3</span>
+                <h3>Financial & scheduling parameters</h3>
+            </div>
+            <div class="step-content">
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Estimated Budget (ZAR) <span class="required">*</span></label>
+                        <input type="number" name="budget" step="1000" placeholder="e.g., 2500000" required value="{{ inquiry.budget if inquiry and inquiry.budget is not none else '' }}">
+                    </div>
+                    <div class="form-group half">
+                        <label>Desired Deadline <span class="required">*</span></label>
+                        <input type="date" name="deadline" required value="{{ inquiry.deadline if inquiry else '' }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Payment milestone preference</label>
+                    <select name="payment_milestone">
+                        <option {% if inquiry and inquiry.payment_milestone == '30% upfront / 40% progress / 30% completion' %}selected{% endif %}>30% upfront / 40% progress / 30% completion</option>
+                        <option {% if inquiry and inquiry.payment_milestone == '20% / 60% / 20%' %}selected{% endif %}>20% / 60% / 20%</option>
+                        <option {% if inquiry and inquiry.payment_milestone == 'Custom (discuss later)' %}selected{% endif %}>Custom (discuss later)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== STEP 4: Client & additional documents ========== -->
+        <div class="form-step">
+            <div class="step-header">
+                <span class="step-number">4</span>
+                <h3>Client & supporting files</h3>
+            </div>
+            <div class="step-content">
+                <div class="form-group">
+                    <label>Client Name <span class="required">*</span></label>
+                    <input type="text" name="client_name" placeholder="Full name or company" required value="{{ inquiry.client_name if inquiry else '' }}">
+                </div>
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Client Email</label>
+                        <input type="email" name="client_email" value="{{ inquiry.client_email if inquiry else (current_user.email if current_user else '') }}" {% if not edit_mode or current_user.role == 'client' %}readonly{% endif %}>
+                        <small>This links the inquiry to your client portal account.</small>
+                    </div>
+                    <div class="form-group half">
+                        <label>Client Phone</label>
+                        <input type="tel" name="client_phone" placeholder="+27 ..." value="{{ inquiry.client_phone if inquiry else '' }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Architectural sketches / technical docs</label>
+                    <input type="file" name="sketches" accept=".pdf,.png,.jpg,.jpeg" multiple>
+                </div>
+                <div class="form-group">
+                    <label>Additional notes (environmental, access constraints, etc.)</label>
+                    <textarea name="project_details" rows="2" placeholder="Any other information for the review team">{{ inquiry.project_details if inquiry else '' }}</textarea>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" name="env_impact" id="envImpact" {% if inquiry and inquiry.env_impact %}checked{% endif %}>
+                    <label for="envImpact">Environmental impact assessment required</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-clipboard-check"></i> Submit inquiry for internal technical review
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .inquiry-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        background: #fff;
+        border-radius: 24px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+        padding: 2rem;
+    }
+    .subtitle {
+        color: #666;
+        margin-bottom: 2rem;
+        border-left: 4px solid #e67e22;
+        padding-left: 1rem;
+    }
+    .form-step {
+        margin-bottom: 2.5rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 1.5rem;
+    }
+    .step-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.2rem;
+    }
+    .step-number {
+        background: #e67e22;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    .step-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+    }
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+    }
+    .required {
+        color: #e67e22;
+    }
+    input, textarea, select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-family: inherit;
+        transition: 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
+        border-color: #e67e22;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+    }
+    .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        background: #fef9f0;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #ffe0b5;
+    }
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: normal;
+        cursor: pointer;
+    }
+    .checkbox-label input {
+        width: auto;
+        margin: 0;
+        transform: scale(1.1);
+    }
+    .form-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .half {
+        flex: 1;
+        min-width: 180px;
+    }
+    .form-check {
+        margin: 0.8rem 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .form-check input {
+        width: auto;
+    }
+    small {
+        display: block;
+        color: #888;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    .ai-camera-box {
+        background: #fef9f0;
+        padding: 1.2rem;
+        border-radius: 20px;
+        margin-bottom: 1rem;
+        border: 1px solid #ffe0b5;
+    }
+    .camera-preview {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    .camera-controls {
+        margin-top: 10px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .btn-camera, .btn-ai {
+        background: #1e1e1e;
+        color: #f39c12;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 30px;
+        font-weight: 500;
+        transition: 0.2s;
+    }
+    .btn-camera:hover, .btn-ai:hover {
+        background: #f39c12;
+        color: #1e1e1e;
+    }
+    .btn-camera:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .ai-area-tool {
+        margin-top: 1rem;
+        border-top: 1px dashed #f39c12;
+        padding-top: 1rem;
+    }
+    .area-result {
+        margin-top: 12px;
+        background: #1e1e1e;
+        color: #f39c12;
+        padding: 8px;
+        border-radius: 12px;
+        text-align: center;
+        font-weight: bold;
+    }
+    .info-note {
+        font-size: 0.7rem;
+        margin-top: 8px;
+        color: #b85c00;
+    }
+    .location-search-wrapper {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    .location-search-wrapper input {
+        flex: 1;
+    }
+    .btn-location {
+        background: #1e1e1e;
+        color: #f39c12;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 30px;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 0.9rem;
+    }
+    .btn-location:hover {
+        background: #f39c12;
+        color: #1e1e1e;
+    }
+    .location-suggestions {
+        margin-top: 6px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+        z-index: 1000;
+    }
+    .location-suggestion-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        transition: background 0.1s;
+    }
+    .location-suggestion-item:hover {
+        background: #fef5e7;
+    }
+    .form-actions {
+        margin-top: 2rem;
+        text-align: center;
+    }
+    .btn-primary {
+        background: #e67e22;
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        font-size: 1rem;
+        border-radius: 40px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-primary:hover {
+        background: #f39c12;
+        transform: translateY(-2px);
+    }
+    @media (max-width: 640px) {
+        .inquiry-container { padding: 1.5rem; }
+        .form-row { flex-direction: column; }
+        .checkbox-group { flex-direction: column; gap: 0.5rem; }
+        .location-search-wrapper { flex-direction: column; align-items: stretch; }
+        .btn-location { text-align: center; }
+    }
+</style>
+
+<script>
+    // ========== LOCATION AUTOCOMPLETE (No API key required) ==========
+    (function() {
+        // Built-in list of major South African locations (expand as needed)
+        const locationDatabase = [
+            "Johannesburg, Gauteng", "Cape Town, Western Cape", "Durban, KwaZulu-Natal",
+            "Pretoria, Gauteng", "Port Elizabeth, Eastern Cape", "Bloemfontein, Free State",
+            "East London, Eastern Cape", "Polokwane, Limpopo", "Nelspruit, Mpumalanga",
+            "Kimberley, Northern Cape", "Rustenburg, North West", "George, Western Cape",
+            "Soweto, Gauteng", "Sandton, Gauteng", "Midrand, Gauteng", "Centurion, Gauteng",
+            "Benoni, Gauteng", "Vereeniging, Gauteng", "Newcastle, KwaZulu-Natal",
+            "Pietermaritzburg, KwaZulu-Natal", "Richards Bay, KwaZulu-Natal",
+            "Paarl, Western Cape", "Stellenbosch, Western Cape", "Mossel Bay, Western Cape",
+            "Mbombela, Mpumalanga", "Polokwane, Limpopo", "Upington, Northern Cape",
+            "Mthatha, Eastern Cape", "Graaff-Reinet, Eastern Cape", "Cape Town International Airport",
+            "Lanseria, Gauteng", "Somerset West, Western Cape"
+        ];
+
+        const input = document.getElementById('location-input');
+        const suggestionsDiv = document.getElementById('location-suggestions');
+        let currentSuggestions = [];
+
+        function filterLocations(query) {
+            if (query.length < 2) return [];
+            const lowerQuery = query.toLowerCase();
+            return locationDatabase.filter(loc => loc.toLowerCase().includes(lowerQuery));
+        }
+
+        function showSuggestions(suggestions) {
+            suggestionsDiv.innerHTML = '';
+            if (suggestions.length === 0) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            suggestions.forEach(loc => {
+                const div = document.createElement('div');
+                div.className = 'location-suggestion-item';
+                div.textContent = loc;
+                div.addEventListener('click', () => {
+                    input.value = loc;
+                    suggestionsDiv.style.display = 'none';
+                    input.focus();
+                });
+                suggestionsDiv.appendChild(div);
+            });
+            suggestionsDiv.style.display = 'block';
+        }
+
+        input.addEventListener('input', (e) => {
+            const query = e.target.value;
+            const matches = filterLocations(query);
+            showSuggestions(matches.slice(0, 8)); // limit to 8
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!suggestionsDiv.contains(e.target) && e.target !== input) {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+
+        // ========== USE MY CURRENT LOCATION (reverse geocoding via Nominatim) ==========
+        const locationBtn = document.getElementById('getCurrentLocationBtn');
+        locationBtn.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+            locationBtn.disabled = true;
+            locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching location...';
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                try {
+                    // Use OpenStreetMap Nominatim for reverse geocoding (free, no key)
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+                    const data = await response.json();
+                    let address = data.display_name || `${lat}, ${lng}`;
+                    // Truncate if too long
+                    if (address.length > 100) address = address.substring(0, 100) + '...';
+                    input.value = address;
+                    suggestionsDiv.style.display = 'none';
+                } catch (error) {
+                    console.error(error);
+                    input.value = `Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)} (reverse geocode failed)`;
+                } finally {
+                    locationBtn.disabled = false;
+                    locationBtn.innerHTML = '<i class="fas fa-location-dot"></i> Use my current location';
+                }
+            }, (error) => {
+                alert("Unable to retrieve your location. Please check permissions.");
+                console.error(error);
+                locationBtn.disabled = false;
+                locationBtn.innerHTML = '<i class="fas fa-location-dot"></i> Use my current location';
+            });
+        });
+    })();
+
+    // ========== AI Camera & area calculation (unchanged, works) ==========
+    (function() {
+        let video = document.getElementById('videoFeed');
+        let canvas = document.getElementById('photoCanvas');
+        let startBtn = document.getElementById('startCameraBtn');
+        let captureBtn = document.getElementById('capturePhotoBtn');
+        let stopBtn = document.getElementById('stopCameraBtn');
+        let refLengthInput = document.getElementById('refLength');
+        let refPixelsInput = document.getElementById('refPixels');
+        let estimateBtn = document.getElementById('estimateAreaBtn');
+        let areaResultDiv = document.getElementById('areaResult');
+        let aiAreaField = document.getElementById('aiAreaField');
+        let photoBase64Field = document.getElementById('sitePhotoBase64');
+        let stream = null;
+        let capturedImageData = null;
+
+        startBtn.onclick = async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.style.display = 'block';
+                captureBtn.disabled = false;
+                stopBtn.disabled = false;
+                startBtn.disabled = true;
+            } catch(err) {
+                alert('Camera access denied or not available: ' + err.message);
+            }
+        };
+
+        stopBtn.onclick = () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            video.style.display = 'none';
+            captureBtn.disabled = true;
+            stopBtn.disabled = true;
+            startBtn.disabled = false;
+        };
+
+        captureBtn.onclick = () => {
+            if (!video.videoWidth) return;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            let ctxCanvas = canvas.getContext('2d');
+            ctxCanvas.drawImage(video, 0, 0, canvas.width, canvas.height);
+            capturedImageData = canvas.toDataURL('image/jpeg', 0.8);
+            photoBase64Field.value = capturedImageData;
+
+            let previewDiv = document.createElement('div');
+            previewDiv.innerHTML = '<p style="margin-top:10px;"><strong>Captured photo (click & drag to measure reference)</strong></p>';
+            let drawCanvas = document.createElement('canvas');
+            drawCanvas.width = canvas.width;
+            drawCanvas.height = canvas.height;
+            drawCanvas.style.maxWidth = '100%';
+            drawCanvas.style.border = '2px solid #f39c12';
+            drawCanvas.style.borderRadius = '12px';
+            let drawCtx = drawCanvas.getContext('2d');
+            drawCtx.drawImage(canvas, 0, 0);
+            previewDiv.appendChild(drawCanvas);
+            let oldDraw = document.querySelector('.draw-area');
+            if(oldDraw) oldDraw.remove();
+            let drawContainer = document.createElement('div');
+            drawContainer.className = 'draw-area';
+            drawContainer.appendChild(previewDiv);
+            document.querySelector('.ai-area-tool').appendChild(drawContainer);
+
+            let isDrawing = false;
+            let startX, startY, endX, endY;
+            drawCanvas.onmousedown = (e) => {
+                const rect = drawCanvas.getBoundingClientRect();
+                const scaleX = drawCanvas.width / rect.width;
+                const scaleY = drawCanvas.height / rect.height;
+                startX = (e.clientX - rect.left) * scaleX;
+                startY = (e.clientY - rect.top) * scaleY;
+                isDrawing = true;
+                drawCtx.drawImage(canvas, 0, 0);
+                drawCtx.strokeStyle = '#e67e22';
+                drawCtx.lineWidth = 3;
+            };
+            drawCanvas.onmousemove = (e) => {
+                if (!isDrawing) return;
+                const rect = drawCanvas.getBoundingClientRect();
+                const scaleX = drawCanvas.width / rect.width;
+                const scaleY = drawCanvas.height / rect.height;
+                endX = (e.clientX - rect.left) * scaleX;
+                endY = (e.clientY - rect.top) * scaleY;
+                drawCtx.drawImage(canvas, 0, 0);
+                drawCtx.beginPath();
+                drawCtx.moveTo(startX, startY);
+                drawCtx.lineTo(endX, endY);
+                drawCtx.stroke();
+            };
+            drawCanvas.onmouseup = () => {
+                if (!isDrawing) return;
+                isDrawing = false;
+                const pixelDistance = Math.hypot(endX - startX, endY - startY);
+                if (refPixelsInput) refPixelsInput.value = Math.round(pixelDistance);
+            };
+        };
+
+        estimateBtn.onclick = () => {
+            if (!capturedImageData) {
+                areaResultDiv.innerText = '⚠️ Capture a photo first.';
+                return;
+            }
+            let refLen = parseFloat(refLengthInput.value);
+            let refPix = parseFloat(refPixelsInput.value);
+            if (isNaN(refLen) || isNaN(refPix) || refPix <= 0 || refLen <= 0) {
+                areaResultDiv.innerText = '❌ Please provide reference length (m) and draw a line on the photo to set pixel distance.';
+                return;
+            }
+            let imgWidthM = (canvas.width / refPix) * refLen;
+            let imgHeightM = (canvas.height / refPix) * refLen;
+            let estimatedArea = imgWidthM * imgHeightM;
+            if (estimatedArea > 10000) estimatedArea = estimatedArea / 2;
+            areaResultDiv.innerHTML = `🧠 AI estimated site area: <strong>${Math.round(estimatedArea)} m²</strong> (based on reference line)`;
+            aiAreaField.value = Math.round(estimatedArea);
+        };
+    })();
+</script>
+{% endblock %}

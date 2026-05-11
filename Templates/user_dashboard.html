@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h2><i class="fas fa-helmet-safety"></i> Project Manager Dashboard</h2>
+    <p>Welcome, {{ current_user.username }}. Manage project work from the shared system records.</p>
+
+    <div class="actions-grid">
+        <div class="action-card"><i class="fas fa-clipboard-list"></i><h3>Project Inquiries</h3><p>Review and update client requests</p><a href="{{ url_for('project_inquiries_list') }}" class="action-btn">Go</a></div>
+        <div class="action-card"><i class="fas fa-users"></i><h3>Match Teams</h3><p>Assign internal crews and machinery</p><a href="{{ url_for('team') }}" class="action-btn">Go</a></div>
+        <div class="action-card"><i class="fas fa-file-signature"></i><h3>Service Agreement</h3><p>Generate contracts from approved enquiries</p><a href="{{ url_for('agreement') }}" class="action-btn">Go</a></div>
+        <div class="action-card"><i class="fas fa-truck-moving"></i><h3>Dispatch Crew</h3><p>Schedule transport and site setup</p><a href="{{ url_for('dispatch') }}" class="action-btn">Go</a></div>
+        <div class="action-card"><i class="fas fa-shopping-cart"></i><h3>Purchase Orders</h3><p>Create supplier orders from BOQ</p><a href="{{ url_for('orders') }}" class="action-btn">Go</a></div>
+        <div class="action-card"><i class="fas fa-credit-card"></i><h3>Payments</h3><p>Record milestone payments</p><a href="{{ url_for('payments') }}" class="action-btn">Go</a></div>
+    </div>
+
+    <section class="dashboard-section">
+        <h3><i class="fas fa-hourglass-half"></i> Pending Queries</h3>
+        {% if pending_inquiries %}
+        <table class="data-table">
+            <thead><tr><th>Client</th><th>Location</th><th>Budget</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for inquiry in pending_inquiries[:10] %}
+                <tr>
+                    <td>{{ inquiry.client_name }}</td>
+                    <td>{{ inquiry.location }}</td>
+                    <td>R{{ "{:,.2f}".format(inquiry.budget|float) }}</td>
+                    <td>{{ inquiry.timestamp[:10] }}</td>
+                    <td>
+                        <a href="{{ url_for('view_inquiry_detail', inquiry_id=inquiry.id) }}" class="btn-small">View</a>
+                        <a href="{{ url_for('edit_inquiry', inquiry_id=inquiry.id) }}" class="btn-small btn-dark">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No pending queries right now.</p>
+        {% endif %}
+    </section>
+</div>
+
+<style>
+    .dashboard-container { max-width: 1200px; margin: 0 auto; }
+    .actions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.2rem; margin: 2rem 0; }
+    .action-card, .dashboard-section { background: white; border-radius: 18px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .action-card { text-align: center; }
+    .action-card i { font-size: 2rem; color: #e67e22; }
+    .action-card p { color: #666; min-height: 38px; }
+    .action-btn, .btn-small { display: inline-block; background: #e67e22; color: white; padding: 8px 16px; border-radius: 30px; text-decoration: none; font-weight: 700; }
+    .btn-small { padding: 5px 12px; font-size: 0.8rem; }
+    .btn-dark { background: #34495e; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #eee; }
+</style>
+{% endblock %}

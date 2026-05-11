@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="survey-wrapper">
+    <div class="survey-header">
+        <h2><i class="fas fa-map-marked-alt"></i> Site Survey & Technical Assessment</h2>
+        <p class="survey-subtitle">Inspect terrain, document soil, upload evidence, and flag risks for the Quantity Surveyor</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="survey-form" id="surveyForm">
+        <!-- Step progress indicator -->
+        <div class="step-progress">
+            <div class="step-progress-item active" data-step="1">1. Terrain & Infrastructure</div>
+            <div class="step-progress-item" data-step="2">2. Soil & Utilities</div>
+            <div class="step-progress-item" data-step="3">3. Upload Reports</div>
+            <div class="step-progress-item" data-step="4">4. Flag Technical Risks</div>
+        </div>
+
+        <!-- STEP 1: Inspect physical terrain and evaluate existing infrastructure -->
+        <div class="form-card" id="step1">
+            <div class="card-header">
+                <span class="step-badge">Step 1</span>
+                <h3>Inspect physical terrain & evaluate existing infrastructure</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Location / site address</label>
+                    <input type="text" name="location" placeholder="Full address or GPS coordinates" required>
+                </div>
+                <div class="form-group">
+                    <label>Terrain description</label>
+                    <textarea name="terrain_description" rows="2" placeholder="Slope, accessibility, vegetation, rock formations, water bodies..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Existing infrastructure assessment</label>
+                    <textarea name="infrastructure_assessment" rows="2" placeholder="Nearby roads, drainage, power lines, water supply, buildings..."></textarea>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-next" data-next="2">Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 2: Document soil conditions and identify utility access points -->
+        <div class="form-card" id="step2" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 2</span>
+                <h3>Document soil conditions & identify utility access points</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Soil type & condition</label>
+                    <textarea name="soil_conditions" rows="2" placeholder="e.g., clay, sandy, rocky, expansive, high water table, bearing capacity"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Utility access points (water, power, gas, sewer)</label>
+                    <textarea name="utility_access" rows="2" placeholder="Location, distance from site, capacity, easements"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Additional site notes</label>
+                    <textarea name="survey_notes" rows="2" placeholder="Any other observations about the site"></textarea>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="1">← Back</button>
+                <button type="button" class="btn-next" data-next="3">Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 3: Upload survey report and photos to the portal -->
+        <div class="form-card" id="step3" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 3</span>
+                <h3>Upload survey report & photos to the portal</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Geotechnical / survey report (PDF)</label>
+                    <input type="file" name="survey_report" accept=".pdf">
+                </div>
+                <div class="form-group">
+                    <label>Site photos (JPG, PNG)</label>
+                    <input type="file" name="site_photos" accept="image/*" multiple>
+                    <small>You can upload multiple images</small>
+                </div>
+                <div class="form-group">
+                    <label>Drone / aerial imagery (optional)</label>
+                    <input type="file" name="aerial_photos" accept="image/*" multiple>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="2">← Back</button>
+                <button type="button" class="btn-next" data-next="4">Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 4: Flag technical risks for the Quantity Surveyor -->
+        <div class="form-card" id="step4" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 4</span>
+                <h3>Flag technical risks for the Quantity Surveyor</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Identified technical risks</label>
+                    <textarea name="technical_risks" rows="3" placeholder="e.g., unstable slope, poor soil bearing, flooding risk, utility relocation needed, environmental constraints"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Risk impact (low/medium/high)</label>
+                    <select name="risk_impact">
+                        <option value="low">Low – manageable with standard measures</option>
+                        <option value="medium">Medium – requires design adjustment</option>
+                        <option value="high">High – may affect budget or timeline</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Recommended mitigation actions</label>
+                    <textarea name="risk_mitigation" rows="2" placeholder="Suggestions for the QS / engineering team"></textarea>
+                </div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="flag_qs" value="yes"> Flag this survey for immediate Quantity Surveyor review</label>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="3">← Back</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-flag-checkered"></i> Submit Site Survey</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Multi-step navigation
+    const steps = [1, 2, 3, 4];
+    let currentStep = 1;
+
+    function showStep(step) {
+        steps.forEach(s => {
+            const card = document.getElementById(`step${s}`);
+            if (card) card.style.display = s === step ? 'block' : 'none';
+        });
+        document.querySelectorAll('.step-progress-item').forEach((item, idx) => {
+            const stepNum = idx + 1;
+            if (stepNum <= step) item.classList.add('active');
+            else item.classList.remove('active');
+        });
+        currentStep = step;
+    }
+
+    document.querySelectorAll('.btn-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const next = parseInt(btn.getAttribute('data-next'));
+            if (next) showStep(next);
+        });
+    });
+    document.querySelectorAll('.btn-prev').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const prev = parseInt(btn.getAttribute('data-prev'));
+            if (prev) showStep(prev);
+        });
+    });
+</script>
+
+<style>
+    .survey-wrapper {
+        max-width: 950px;
+        margin: 2rem auto;
+        background: #fff;
+        border-radius: 32px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        padding: 2rem;
+    }
+    .survey-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .survey-header h2 {
+        font-size: 1.8rem;
+        color: #e67e22;
+        margin-bottom: 0.3rem;
+    }
+    .survey-subtitle {
+        color: #777;
+        border-left: 3px solid #e67e22;
+        padding-left: 1rem;
+        display: inline-block;
+    }
+    .step-progress {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 0.8rem;
+    }
+    .step-progress-item {
+        flex: 1;
+        text-align: center;
+        font-weight: 600;
+        color: #aaa;
+        position: relative;
+        font-size: 0.9rem;
+    }
+    .step-progress-item.active {
+        color: #e67e22;
+    }
+    .step-progress-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #e67e22;
+        border-radius: 3px;
+    }
+    .form-card {
+        background: #fefcf8;
+        border-radius: 24px;
+        padding: 1.5rem;
+        transition: 0.2s;
+    }
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #f0e3d0;
+        padding-bottom: 0.8rem;
+    }
+    .step-badge {
+        background: #e67e22;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    .card-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+    }
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    .form-group label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.4rem;
+        color: #2c2c2c;
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        font-family: inherit;
+        transition: 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: #e67e22;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+    }
+    .checkbox-group {
+        margin: 1rem 0;
+    }
+    .checkbox-group label {
+        font-weight: normal;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    small {
+        display: block;
+        color: #888;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1.8rem;
+        gap: 1rem;
+    }
+    .btn-next, .btn-prev, .btn-submit {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 40px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-next {
+        background: #e67e22;
+        color: white;
+    }
+    .btn-next:hover {
+        background: #f39c12;
+        transform: translateX(2px);
+    }
+    .btn-prev {
+        background: #f0f0f0;
+        color: #555;
+    }
+    .btn-prev:hover {
+        background: #e0e0e0;
+    }
+    .btn-submit {
+        background: #27ae60;
+        color: white;
+        margin-left: auto;
+    }
+    .btn-submit:hover {
+        background: #2ecc71;
+    }
+    @media (max-width: 700px) {
+        .survey-wrapper { padding: 1rem; }
+        .step-progress-item { font-size: 0.7rem; }
+        .card-footer { flex-direction: column; }
+        .btn-submit { margin-left: 0; }
+    }
+</style>
+{% endblock %}

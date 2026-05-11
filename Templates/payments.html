@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="payment-page">
+    <div class="payment-grid">
+        <!-- Payment Form -->
+        <div class="payment-card">
+            <div class="payment-header">
+                <i class="fas fa-credit-card"></i>
+                <h2>Process Milestone Payment</h2>
+                <p>Enter your payment details below. All transactions are secure.</p>
+            </div>
+
+            <form method="POST" class="payment-form">
+                {% if error %}
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label><i class="fas fa-flag-checkered"></i> Milestone</label>
+                    <input type="text" name="milestone" placeholder="e.g., Foundation Complete" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-dollar-sign"></i> Amount (ZAR – South African Rand)</label>
+                    <input type="number" name="amount" step="0.01" placeholder="0.00" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-credit-card"></i> Payment Method</label>
+                    <select name="payment_method" id="paymentMethod" required>
+                        <option value="credit_card">💳 Credit Card (Visa/Mastercard)</option>
+                        <option value="eft">🏦 EFT (Electronic Funds Transfer)</option>
+                        <option value="snapscan">📱 SnapScan</option>
+                        <option value="zapper">📱 Zapper</option>
+                        <option value="mpesa">📱 M-Pesa</option>
+                        <option value="payfast">🚀 PayFast</option>
+                    </select>
+                </div>
+
+                <!-- Conditional fields for different payment methods -->
+                <div id="cardFields" class="conditional-fields">
+                    <div class="form-group">
+                        <label><i class="fas fa-id-card"></i> Card Number</label>
+                        <input type="text" name="account_number" placeholder="**** **** **** 1234">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Expiry Date</label>
+                            <input type="text" name="expiry" placeholder="MM/YY">
+                        </div>
+                        <div class="form-group half">
+                            <label>CVV</label>
+                            <input type="password" name="cvv" placeholder="123" maxlength="4">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="mobileFields" class="conditional-fields" style="display: none;">
+                    <div class="form-group">
+                        <label><i class="fas fa-phone"></i> Mobile Number</label>
+                        <input type="tel" name="mobile_number" placeholder="e.g., 082 123 4567">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-code"></i> PIN / Reference</label>
+                        <input type="text" name="pin_reference" placeholder="Optional PIN or reference">
+                    </div>
+                </div>
+
+                <div id="eftFields" class="conditional-fields" style="display: none;">
+                    <div class="form-group">
+                        <label><i class="fas fa-building"></i> Bank Name</label>
+                        <input type="text" name="bank_name" placeholder="e.g., Standard Bank">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-hashtag"></i> Account Number</label>
+                        <input type="text" name="eft_account" placeholder="Your account number">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-pay">
+                    <i class="fas fa-lock"></i> Pay Now
+                </button>
+            </form>
+
+            <div class="secure-note">
+                <i class="fas fa-shield-alt"></i> Your payment information is encrypted and secure.
+            </div>
+        </div>
+
+        <!-- Payment Summary (right side) -->
+        <div class="summary-card">
+            <h3><i class="fas fa-receipt"></i> Payment Summary</h3>
+            <div class="summary-details">
+                <div class="summary-row">
+                    <span>Milestone:</span>
+                    <span id="summaryMilestone">—</span>
+                </div>
+                <div class="summary-row">
+                    <span>Amount (ZAR):</span>
+                    <span id="summaryAmount">R0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Payment Method:</span>
+                    <span id="summaryMethod">—</span>
+                </div>
+            </div>
+            <hr>
+            <div class="summary-total">
+                <span>Total to Pay:</span>
+                <span id="totalAmount">R0.00</span>
+            </div>
+            <p class="summary-note">Your payment will be processed after confirmation.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Live summary update
+    const milestoneInput = document.querySelector('input[name="milestone"]');
+    const amountInput = document.querySelector('input[name="amount"]');
+    const methodSelect = document.getElementById('paymentMethod');
+    const summaryMilestone = document.getElementById('summaryMilestone');
+    const summaryAmount = document.getElementById('summaryAmount');
+    const summaryMethod = document.getElementById('summaryMethod');
+    const totalAmount = document.getElementById('totalAmount');
+
+    // Conditional field groups
+    const cardFields = document.getElementById('cardFields');
+    const mobileFields = document.getElementById('mobileFields');
+    const eftFields = document.getElementById('eftFields');
+
+    function updateSummary() {
+        summaryMilestone.textContent = milestoneInput.value || '—';
+        const amount = parseFloat(amountInput.value) || 0;
+        summaryAmount.textContent = `R${amount.toFixed(2)}`;
+        totalAmount.textContent = `R${amount.toFixed(2)}`;
+        const selectedOption = methodSelect.options[methodSelect.selectedIndex];
+        summaryMethod.textContent = selectedOption ? selectedOption.text.split(' ').slice(1).join(' ') : '—';
+    }
+
+    function toggleConditionalFields() {
+        const method = methodSelect.value;
+        // Hide all
+        cardFields.style.display = 'none';
+        mobileFields.style.display = 'none';
+        eftFields.style.display = 'none';
+        // Show relevant
+        if (method === 'credit_card') {
+            cardFields.style.display = 'block';
+        } else if (method === 'mpesa' || method === 'snapscan' || method === 'zapper') {
+            mobileFields.style.display = 'block';
+        } else if (method === 'eft') {
+            eftFields.style.display = 'block';
+        }
+        // For PayFast, no extra fields (redirect to gateway)
+    }
+
+    milestoneInput.addEventListener('input', updateSummary);
+    amountInput.addEventListener('input', updateSummary);
+    methodSelect.addEventListener('change', () => {
+        updateSummary();
+        toggleConditionalFields();
+    });
+
+    // Initial setup
+    updateSummary();
+    toggleConditionalFields();
+</script>
+
+<style>
+    .payment-page {
+        max-width: 1100px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    .payment-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 2rem;
+    }
+    .payment-card {
+        background: white;
+        border-radius: 28px;
+        padding: 2rem;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    }
+    .payment-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .payment-header i {
+        font-size: 2.5rem;
+        color: #e67e22;
+    }
+    .payment-header h2 {
+        margin: 0.5rem 0;
+    }
+    .payment-header p {
+        color: #777;
+    }
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.4rem;
+        color: #2c2c2c;
+    }
+    label i {
+        margin-right: 6px;
+        color: #e67e22;
+    }
+    input, select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: 0.2s;
+    }
+    input:focus, select:focus {
+        border-color: #e67e22;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+    }
+    .form-row {
+        display: flex;
+        gap: 1rem;
+    }
+    .half {
+        flex: 1;
+    }
+    .conditional-fields {
+        margin-top: 1rem;
+        padding-top: 0.5rem;
+        border-top: 1px dashed #eee;
+    }
+    .btn-pay {
+        background: #27ae60;
+        color: white;
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 40px;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 0.5rem;
+    }
+    .btn-pay:hover {
+        background: #2ecc71;
+        transform: translateY(-2px);
+    }
+    .secure-note {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.8rem;
+        color: #888;
+    }
+    .error-message {
+        background: #fee2e2;
+        border-left: 4px solid #e74c3c;
+        padding: 10px 15px;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        color: #c0392b;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    /* Summary Card */
+    .summary-card {
+        background: linear-gradient(145deg, #fffaf2, #fef3e4);
+        border-radius: 28px;
+        padding: 1.5rem;
+        border: 1px solid #e2bc7c;
+        height: fit-content;
+        position: sticky;
+        top: 80px;
+    }
+    .summary-card h3 {
+        margin-top: 0;
+        color: #2c2c2c;
+        border-bottom: 2px solid #e67e22;
+        display: inline-block;
+        padding-bottom: 0.3rem;
+    }
+    .summary-details {
+        margin: 1.5rem 0;
+    }
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px dashed #e2bc7c;
+    }
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-top: 1rem;
+        color: #e67e22;
+    }
+    .summary-note {
+        font-size: 0.7rem;
+        color: #888;
+        margin-top: 1rem;
+        text-align: center;
+    }
+    @media (max-width: 800px) {
+        .payment-grid { grid-template-columns: 1fr; }
+        .summary-card { position: static; margin-top: 1rem; }
+    }
+</style>
+{% endblock %}

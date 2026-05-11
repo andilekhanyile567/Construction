@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MuhleOps – Construction Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --soil:   #1A1208;
+  --steel:  #0D1B2A;
+  --amber:  #E8A020;
+  --amber2: #F4C05A;
+  --rust:   #C44B1B;
+  --sage:   #3D6B5A;
+  --fog:    #F5F0E8;
+  --mist:   #EDE8DF;
+  --ink:    #1C1C1C;
+  --mid:    #6B6355;
+  --line:   rgba(232,160,32,0.18);
+  --card:   #FFFCF5;
+  --shadow: 0 4px 24px rgba(26,18,8,0.10);
+  --r:      10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--fog);color:var(--ink);min-height:100vh;overflow-x:hidden;}
+
+/* ── Login ── */
+#login-screen{position:fixed;inset:0;background:var(--steel);display:flex;align-items:center;justify-content:center;z-index:1000;transition:opacity .4s;}
+#login-screen.hidden{opacity:0;pointer-events:none;}
+.login-box{background:var(--soil);border:1px solid var(--line);border-radius:16px;padding:48px;width:400px;max-width:95vw;}
+.login-logo{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--amber);letter-spacing:-1px;margin-bottom:4px;}
+.login-sub{color:var(--mid);font-size:.85rem;margin-bottom:32px;}
+.login-box label{display:block;color:var(--amber2);font-size:.75rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;margin-top:20px;}
+.login-box input,.login-box select{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(232,160,32,.25);border-radius:8px;padding:12px 14px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.95rem;outline:none;transition:border-color .2s;}
+.login-box input:focus,.login-box select:focus{border-color:var(--amber);}
+.login-box select option{background:var(--soil);color:#fff;}
+.btn-login{margin-top:28px;width:100%;background:var(--amber);color:var(--soil);font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;border:none;border-radius:8px;padding:14px;cursor:pointer;transition:background .2s;}
+.btn-login:hover{background:var(--amber2);}
+.login-hint{margin-top:16px;color:var(--mid);font-size:.78rem;text-align:center;line-height:1.6;}
+
+/* ── App Shell ── */
+#app{display:none;min-height:100vh;}
+#app.show{display:flex;flex-direction:column;}
+
+/* ── Top Bar ── */
+.topbar{background:var(--soil);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 28px;height:60px;gap:16px;position:sticky;top:0;z-index:100;}
+.topbar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:var(--amber);letter-spacing:-0.5px;flex:0 0 auto;}
+.topbar-logo span{color:rgba(255,255,255,.45);font-weight:400;font-size:.8rem;margin-left:8px;}
+.topbar-nav{display:flex;gap:4px;flex:1;overflow-x:auto;scrollbar-width:none;}
+.topbar-nav::-webkit-scrollbar{display:none;}
+.nav-btn{white-space:nowrap;background:none;border:none;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:.82rem;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all .2s;}
+.nav-btn:hover{color:#fff;background:rgba(255,255,255,.08);}
+.nav-btn.active{color:var(--amber);background:rgba(232,160,32,.12);}
+.topbar-right{display:flex;align-items:center;gap:12px;flex:0 0 auto;}
+.notif-btn{position:relative;background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:1.2rem;padding:6px;border-radius:6px;transition:color .2s;}
+.notif-btn:hover{color:var(--amber);}
+.notif-badge{position:absolute;top:2px;right:2px;background:var(--rust);color:#fff;font-size:.6rem;font-weight:700;padding:1px 4px;border-radius:10px;min-width:16px;text-align:center;}
+.user-chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border-radius:8px;padding:6px 12px;}
+.user-avatar{width:28px;height:28px;background:var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;color:var(--soil);}
+.user-name{color:#fff;font-size:.82rem;font-weight:500;}
+.user-role{color:var(--amber2);font-size:.7rem;text-transform:capitalize;}
+.btn-logout{background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);padding:6px 12px;border-radius:6px;font-size:.78rem;cursor:pointer;transition:all .2s;}
+.btn-logout:hover{border-color:var(--rust);color:var(--rust);}
+
+/* ── Main Layout ── */
+.main{flex:1;padding:28px;max-width:1280px;margin:0 auto;width:100%;}
+
+/* ── Pages ── */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ── Section Header ── */
+.section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.section-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;color:var(--ink);}
+.section-title span{color:var(--amber);}
+.section-sub{color:var(--mid);font-size:.85rem;margin-top:4px;}
+
+/* ── Stat Cards ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
+.stat-card{background:var(--card);border:1px solid var(--mist);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--amber);}
+.stat-card.green::before{background:var(--sage);}
+.stat-card.rust::before{background:var(--rust);}
+.stat-card.blue::before{background:#3A7CA5;}
+.stat-val{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--ink);}
+.stat-label{color:var(--mid);font-size:.78rem;margin-top:4px;text-transform:uppercase;letter-spacing:.06em;}
+
+/* ── Cards & Grids ── */
+.card{background:var(--card);border:1px solid var(--mist);border-radius:var(--r);padding:24px;box-shadow:var(--shadow);}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:16px;color:var(--ink);display:flex;align-items:center;gap:8px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+
+/* ── Project Cards ── */
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;}
+.project-card{background:var(--card);border:1px solid var(--mist);border-radius:var(--r);padding:22px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.project-card:hover{border-color:var(--amber);transform:translateY(-2px);box-shadow:0 8px 32px rgba(26,18,8,.12);}
+.project-card::after{content:'';position:absolute;bottom:0;left:0;height:3px;background:var(--amber);transition:width .3s;width:0;}
+.project-card:hover::after{width:100%;}
+.pc-status{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;}
+.pc-status.active{background:#E8F5E9;color:var(--sage);}
+.pc-status.pending{background:#FFF8E1;color:#B8860B;}
+.pc-status.complete{background:#E3F2FD;color:#1565C0;}
+.pc-status.default{background:var(--mist);color:var(--mid);}
+.pc-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;margin-bottom:6px;}
+.pc-loc{color:var(--mid);font-size:.82rem;margin-bottom:12px;display:flex;align-items:center;gap:4px;}
+.pc-budget{font-size:.85rem;color:var(--mid);}
+.pc-budget strong{color:var(--ink);}
+.progress-bar{height:5px;background:var(--mist);border-radius:3px;margin-top:14px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--amber2));border-radius:3px;transition:width .6s ease;}
+
+/* ── Forms ── */
+.form-group{margin-bottom:18px;}
+.form-group label{display:block;font-size:.78rem;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:#fff;border:1.5px solid #E0D8CC;border-radius:8px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:.93rem;color:var(--ink);outline:none;transition:border-color .2s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--amber);}
+.form-group textarea{resize:vertical;min-height:90px;}
+.form-hint{color:var(--mid);font-size:.75rem;margin-top:5px;}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;padding:10px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .2s;text-decoration:none;}
+.btn-primary{background:var(--amber);color:var(--soil);}
+.btn-primary:hover{background:var(--amber2);}
+.btn-secondary{background:var(--mist);color:var(--ink);border:1px solid #ddd;}
+.btn-secondary:hover{background:#e8e0d5;}
+.btn-success{background:var(--sage);color:#fff;}
+.btn-success:hover{background:#2D5543;}
+.btn-danger{background:var(--rust);color:#fff;}
+.btn-danger:hover{background:#A83B14;}
+.btn-sm{padding:7px 14px;font-size:.78rem;}
+.btn-outline{background:transparent;border:1.5px solid var(--amber);color:var(--amber);}
+.btn-outline:hover{background:var(--amber);color:var(--soil);}
+
+/* ── Table ── */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.86rem;}
+th{background:var(--mist);color:var(--mid);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;padding:10px 14px;text-align:left;font-weight:600;}
+td{padding:12px 14px;border-bottom:1px solid #EDE8DF;color:var(--ink);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#FFFAEF;}
+
+/* ── Badges ── */
+.badge{display:inline-block;font-size:.7rem;font-weight:600;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;}
+.badge-amber{background:#FFF3CD;color:#856404;}
+.badge-green{background:#D1E7DD;color:#0A4D2E;}
+.badge-blue{background:#CCE5FF;color:#003A70;}
+.badge-red{background:#F8D7DA;color:#721C24;}
+.badge-grey{background:#E2E3E5;color:#383D41;}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:4px;background:var(--mist);padding:4px;border-radius:10px;margin-bottom:24px;flex-wrap:wrap;}
+.tab{flex:1;min-width:120px;text-align:center;padding:9px 16px;border-radius:7px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--mid);cursor:pointer;transition:all .2s;font-weight:500;}
+.tab.active{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 6px rgba(0,0,0,.08);}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,18,8,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:14px;padding:28px;width:600px;max-width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;}
+.modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--mid);padding:4px;border-radius:6px;transition:color .2s;}
+.modal-close:hover{color:var(--rust);}
+
+/* ── Notifications Panel ── */
+.notif-panel{position:fixed;top:60px;right:0;width:340px;max-height:calc(100vh - 60px);background:#fff;border-left:1px solid var(--mist);z-index:200;transform:translateX(100%);transition:transform .3s;overflow-y:auto;box-shadow:-8px 0 24px rgba(0,0,0,.1);}
+.notif-panel.open{transform:translateX(0);}
+.notif-panel-header{padding:16px 20px;border-bottom:1px solid var(--mist);font-family:'Syne',sans-serif;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+.notif-item{padding:14px 20px;border-bottom:1px solid var(--mist);font-size:.83rem;line-height:1.5;cursor:default;}
+.notif-item.unread{background:#FFFDF0;}
+.notif-time{color:var(--mid);font-size:.72rem;margin-top:3px;}
+.notif-dot{display:inline-block;width:7px;height:7px;background:var(--amber);border-radius:50%;margin-right:6px;}
+
+/* ── Timeline ── */
+.timeline{position:relative;padding-left:24px;}
+.timeline::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--mist);}
+.tl-item{position:relative;margin-bottom:20px;}
+.tl-dot{position:absolute;left:-24px;top:4px;width:14px;height:14px;background:var(--amber);border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px var(--amber);}
+.tl-dot.done{background:var(--sage);box-shadow:0 0 0 2px var(--sage);}
+.tl-content{background:var(--card);border:1px solid var(--mist);border-radius:8px;padding:14px 16px;}
+.tl-title{font-weight:600;font-size:.9rem;}
+.tl-meta{color:var(--mid);font-size:.78rem;margin-top:3px;}
+
+/* ── Empty State ── */
+.empty{text-align:center;padding:48px 20px;color:var(--mid);}
+.empty-icon{font-size:3rem;margin-bottom:12px;}
+.empty-text{font-size:.95rem;}
+
+/* ── Alert ── */
+.alert{padding:12px 16px;border-radius:8px;font-size:.85rem;margin-bottom:16px;display:none;}
+.alert.show{display:block;}
+.alert-success{background:#D1E7DD;color:#0A4D2E;border:1px solid #A3CFBB;}
+.alert-error{background:#F8D7DA;color:#721C24;border:1px solid #F1AEB5;}
+
+/* ── BOQ Items ── */
+.boq-item-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px;}
+@media(max-width:600px){.boq-item-row{grid-template-columns:1fr 1fr;}}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#CEC5B5;border-radius:3px;}
+
+/* ── Responsive ── */
+@media(max-width:640px){.main{padding:16px;}.topbar{padding:0 16px;}.topbar-logo span{display:none;}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ LOGIN ═══════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">MuhleOps</div>
+    <div class="login-sub">Construction Project Management System</div>
+    <div id="login-alert" class="alert alert-error">Invalid email or password.</div>
+    <label>Email Address</label>
+    <select id="login-email-select" onchange="fillEmail(this.value)">
+      <option value="">— Select demo user —</option>
+      <option value="client@muhle.co.za">Client – Zinhle Mbalo</option>
+      <option value="pm@muhle.co.za">Project Manager – Sipho Dlamini</option>
+      <option value="engineer@muhle.co.za">Engineer – Thabo Nkosi</option>
+      <option value="qs@muhle.co.za">Quantity Surveyor – Nomsa Khumalo</option>
+      <option value="resource@muhle.co.za">Resource Manager – Bongani Mthembu</option>
+      <option value="procurement@muhle.co.za">Procurement Officer – Lindiwe</option>
+      <option value="logistics@muhle.co.za">Logistics Coordinator – Mpho</option>
+      <option value="sitemanager@muhle.co.za">Site Manager – Ayanda Cele</option>
+      <option value="finance@muhle.co.za">Finance Officer – Precious</option>
+    </select>
+    <label>Email</label>
+    <input type="email" id="login-email" placeholder="email@muhle.co.za">
+    <label>Password</label>
+    <input type="password" id="login-password" placeholder="password">
+    <button class="btn-login" onclick="doLogin()">Sign In →</button>
+    <div class="login-hint">Demo passwords: client123 / pm123 / eng123 / qs123 / res123 / proc123 / log123 / sm123 / fin123</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ APP ═══════════════════════════ -->
+<div id="app">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-logo">MuhleOps <span>Construction Management</span></div>
+    <div class="topbar-nav" id="topbar-nav"></div>
+    <div class="topbar-right">
+      <button class="notif-btn" onclick="toggleNotif()" id="notif-btn">
+        🔔 <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+      </button>
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div>
+          <div class="user-name" id="user-name-display">—</div>
+          <div class="user-role" id="user-role-display">—</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Notifications Panel -->
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-panel-header">
+      Notifications
+      <button class="btn btn-sm btn-secondary" onclick="markAllRead()">Mark all read</button>
+    </div>
+    <div id="notif-list"></div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+
+    <!-- ── Dashboard ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Dashboard <span>Overview</span></div>
+          <div class="section-sub">MuhleOps construction operations at a glance</div>
+        </div>
+      </div>
+      <div class="stats-row" id="dash-stats"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">📋 Recent Projects</div>
+          <div id="dash-projects"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔄 Project Pipeline</div>
+          <div id="dash-pipeline"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── UC01: Submit Inquiry ── -->
+    <div class="page" id="page-inquiry">
+      <div class="section-header">
+        <div>
+          <div class="section-title">UC01 <span>Submit Project Inquiry</span></div>
+          <div class="section-sub">Client submits a formal construction project request</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-inquiry')">+ New Inquiry</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Project</th><th>Location</th><th>Budget</th><th>Deadline</th><th>Status</th><th>Submitted</th></tr></thead>
+          <tbody id="inquiry-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── UC02: Site Survey ── -->
+    <div class="page" id="page-survey">
+      <div class="section-header">
+        <div>
+          <div class="section-title">UC02 <span>Conduct Site Survey</span></div>
+          <div class="section-sub">Engineers document terrain, soil and utility conditions</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-survey')">+ New Survey</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Project</th><th>Terrain</th><th>Soil</th><th>Utilities</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody id="survey-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── UC03: BOQ ── -->
+    <div class="page" id="page-boq">
+      <div class="section-header">
+        <div>
+          <div class="section-title">UC03 <span>Generate Internal BOQ</span></div>
+          <div class="section-sub">Quantity Surveyor calculates detailed Bill of Quantities</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-boq')">+ New BOQ</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Project</th><th>Items</th><th>Labour</th><th>Overhead</th><th>Total</th><th>Date</th></tr></thead>
+          <tbody id="boq-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── UC04: Team Assignment ── -->
+    <div class="page" id="page-teams">
+      <div class="section-header">
+        <div>
+          <div class="section-title">UC04 <span>Match Internal Teams</span></div>
+          <div class="section-sub">Assign crews, machinery and managers to projects</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-teams')">+ Assign Teams</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Project</th><th>Crew</th><th>Machinery</th><th>Managers</th><th>Start Date</th></tr></thead>
+          <tbody id="teams-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── UC05: Service Agreement ── -->
+    <div class="page" id="page-agreement">
+      <div class="section-header">
+        <div>
+          <div class="section-title">UC05 <span>Service Agreements</span></div>
+          <div class="section-sub">Generate and digitally sign formal service agreements</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-agreement')">+ Create Agreement</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Project</th><th>Value</th><th>Payment Terms</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="agreement-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── UC07: Purchase Orders ── -->
+    <div class="page" id="page-po">
+      <div class="section-header">
+        <div>
+          <div class="section-title">UC07 <span>Purchase Orders</span></div>
+          <div class="section-sub">Procure materials from approved suppliers</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-po')">+ New PO</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Project</th><th>Supplier</th><th>Items</th><th>Total</th><th>Delivery</th><th>Status</th></tr></thead>
+          <tbody id="po-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── UC08: Dispatch ── -->
+    <div class="page" id="page-dispatch">
+      <div class="section-header">
+        <div>
+          <div class="section-title">UC08 <span>Dispatch Equipment & Crew</span></div>
+          <div class="section-sub">Mobilize machinery and crews to the construction site</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-dispatch')">+ New Dispatch</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Project</th><th>Equipment</th><th>Crew</th><th>Mobilization Date</th><th>Status</th></tr></thead>
+          <tbody id="dispatch-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── UC09: Progress ── -->
+    <div class="page" id="page-progress">
+      <div class="section-header">
+        <div>
+          <div class="section-title">UC09 <span>Site Progress Updates</span></div>
+          <div class="section-sub">Real-time tracking of physical work completed on site</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-progress')">+ Log Progress</button>
+      </div>
+      <div id="progress-list"></div>
+    </div>
+
+    <!-- ── UC13: Payments ── -->
+    <div class="page" id="page-payments">
+      <div class="section-header">
+        <div>
+          <div class="section-title">UC13 <span>Milestone Payments</span></div>
+          <div class="section-sub">Process financial transactions upon milestone completion</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-payment')">+ Process Payment</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Invoice</th><th>Project</th><th>Milestone</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody id="payments-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── UC14: Completion ── -->
+    <div class="page" id="page-completion">
+      <div class="section-header">
+        <div>
+          <div class="section-title">UC14 <span>Issue Completion Certificate</span></div>
+          <div class="section-sub">Formal project closure and handover of assets</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-completion')">+ Issue Certificate</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Certificate No.</th><th>Project</th><th>Final Inspection</th><th>Handover Notes</th><th>Issued</th></tr></thead>
+          <tbody id="completion-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+
+<!-- UC01 -->
+<div class="modal-overlay" id="modal-inquiry">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📋 Submit Project Inquiry</div>
+      <button class="modal-close" onclick="closeModal('modal-inquiry')">✕</button>
+    </div>
+    <div id="inquiry-alert" class="alert"></div>
+    <div class="grid-2">
+      <div class="form-group"><label>Project Title</label><input id="inq-title" placeholder="e.g. Durban Harbour Office Block"></div>
+      <div class="form-group"><label>Location</label><input id="inq-location" placeholder="e.g. Durban, KZN"></div>
+    </div>
+    <div class="form-group"><label>Project Scope</label><textarea id="inq-scope" placeholder="Describe the scope of work..."></textarea></div>
+    <div class="grid-2">
+      <div class="form-group"><label>Budget (ZAR)</label><input type="number" id="inq-budget" placeholder="5000000"></div>
+      <div class="form-group"><label>Desired Deadline</label><input type="date" id="inq-deadline"></div>
+    </div>
+    <div class="form-group"><label>Additional Notes</label><textarea id="inq-desc" placeholder="Any special requirements..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitInquiry()">Submit Inquiry →</button>
+  </div>
+</div>
+
+<!-- UC02 -->
+<div class="modal-overlay" id="modal-survey">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🏗️ Conduct Site Survey</div>
+      <button class="modal-close" onclick="closeModal('modal-survey')">✕</button>
+    </div>
+    <div id="survey-alert" class="alert"></div>
+    <div class="form-group"><label>Project</label><select id="srv-project"></select></div>
+    <div class="grid-2">
+      <div class="form-group"><label>Terrain Type</label>
+        <select id="srv-terrain"><option>Flat</option><option>Sloped</option><option>Rocky</option><option>Waterlogged</option><option>Mixed</option></select>
+      </div>
+      <div class="form-group"><label>Soil Conditions</label>
+        <select id="srv-soil"><option>Stable Clay</option><option>Sandy</option><option>Expansive</option><option>Weak Bearing</option><option>Good</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Utility Access</label><input id="srv-utility" placeholder="e.g. Municipal water, Eskom connection available"></div>
+    <div class="form-group"><label>Technical Risks Identified</label><textarea id="srv-risks" placeholder="List any risks for the QS..."></textarea></div>
+    <div class="form-group"><label>Survey Notes</label><textarea id="srv-notes" placeholder="Additional observations..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitSurvey()">Submit Survey Report →</button>
+  </div>
+</div>
+
+<!-- UC03 -->
+<div class="modal-overlay" id="modal-boq">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📊 Generate Internal BOQ</div>
+      <button class="modal-close" onclick="closeModal('modal-boq')">✕</button>
+    </div>
+    <div id="boq-alert" class="alert"></div>
+    <div class="form-group"><label>Project</label><select id="boq-project"></select></div>
+    <div class="card-title" style="margin-bottom:12px;font-size:.85rem;">Material Items</div>
+    <div id="boq-items"></div>
+    <button class="btn btn-secondary btn-sm" onclick="addBOQItem()" style="margin-bottom:16px;">+ Add Item</button>
+    <div class="grid-2">
+      <div class="form-group"><label>Labour Cost (R)</label><input type="number" id="boq-labour" placeholder="0" oninput="calcBOQ()"></div>
+      <div class="form-group"><label>Machinery Cost (R)</label><input type="number" id="boq-machinery" placeholder="0" oninput="calcBOQ()"></div>
+    </div>
+    <div class="form-group"><label>Overhead % (default 10%)</label><input type="number" id="boq-overhead" value="10" oninput="calcBOQ()"></div>
+    <div class="card" style="background:#FFFAEF;border-color:var(--amber);margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+        <div><div style="font-size:.75rem;color:var(--mid)">Subtotal</div><div style="font-family:'Syne',sans-serif;font-weight:700;" id="boq-sub">R 0</div></div>
+        <div><div style="font-size:.75rem;color:var(--mid)">Overhead+Contingency</div><div style="font-family:'Syne',sans-serif;font-weight:700;" id="boq-ov">R 0</div></div>
+        <div><div style="font-size:.75rem;color:var(--mid)">Total Quote</div><div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--amber);font-size:1.1rem;" id="boq-total">R 0</div></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitBOQ()">Generate BOQ →</button>
+  </div>
+</div>
+
+<!-- UC04 -->
+<div class="modal-overlay" id="modal-teams">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">👷 Match Internal Teams</div>
+      <button class="modal-close" onclick="closeModal('modal-teams')">✕</button>
+    </div>
+    <div id="teams-alert" class="alert"></div>
+    <div class="form-group"><label>Project</label><select id="tm-project"></select></div>
+    <div class="form-group"><label>Assigned Crews (comma-separated)</label><input id="tm-crews" placeholder="e.g. Structural Crew A, Electrical Team B"></div>
+    <div class="form-group"><label>Machinery Assigned</label><input id="tm-machinery" placeholder="e.g. Tower Crane #3, Excavator #7"></div>
+    <div class="form-group"><label>Site Managers</label><input id="tm-managers" placeholder="e.g. Ayanda Cele, John Smith"></div>
+    <div class="form-group"><label>Mobilization Start Date</label><input type="date" id="tm-start"></div>
+    <div class="form-group"><label>Notes</label><textarea id="tm-notes" placeholder="Special requirements..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitTeams()">Assign Teams →</button>
+  </div>
+</div>
+
+<!-- UC05 -->
+<div class="modal-overlay" id="modal-agreement">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📝 Create Service Agreement</div>
+      <button class="modal-close" onclick="closeModal('modal-agreement')">✕</button>
+    </div>
+    <div id="agr-alert" class="alert"></div>
+    <div class="form-group"><label>Project</label><select id="agr-project"></select></div>
+    <div class="form-group"><label>Payment Terms</label>
+      <select id="agr-terms">
+        <option>30% upfront, 40% at midpoint, 30% on completion</option>
+        <option>Milestone-based monthly payments</option>
+        <option>50% upfront, 50% on completion</option>
+        <option>Progress payments every 30 days</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Project Milestones (one per line)</label><textarea id="agr-milestones" placeholder="Foundation Complete&#10;Structure Topped Out&#10;Roofing Complete&#10;Finishes Complete&#10;Handover"></textarea></div>
+    <div class="form-group"><label>Warranties & Legal Terms</label><textarea id="agr-warranties" placeholder="e.g. 12-month structural warranty, NHBRC compliance..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitAgreement()">Generate Agreement →</button>
+  </div>
+</div>
+
+<!-- UC07 -->
+<div class="modal-overlay" id="modal-po">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🛒 Execute Purchase Order</div>
+      <button class="modal-close" onclick="closeModal('modal-po')">✕</button>
+    </div>
+    <div id="po-alert" class="alert"></div>
+    <div class="form-group"><label>Project</label><select id="po-project"></select></div>
+    <div class="form-group"><label>Supplier Name</label><input id="po-supplier" placeholder="e.g. BuildMart SA"></div>
+    <div class="form-group"><label>Materials (comma-separated)</label><input id="po-items" placeholder="e.g. 50T Cement, 200 Steel Bars, 5000 Bricks"></div>
+    <div class="grid-2">
+      <div class="form-group"><label>Total Value (R)</label><input type="number" id="po-total" placeholder="0"></div>
+      <div class="form-group"><label>Expected Delivery Date</label><input type="date" id="po-delivery"></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitPO()">Send Purchase Order →</button>
+  </div>
+</div>
+
+<!-- UC08 -->
+<div class="modal-overlay" id="modal-dispatch">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🚛 Dispatch Equipment & Crew</div>
+      <button class="modal-close" onclick="closeModal('modal-dispatch')">✕</button>
+    </div>
+    <div id="dispatch-alert" class="alert"></div>
+    <div class="form-group"><label>Project</label><select id="dp-project"></select></div>
+    <div class="form-group"><label>Equipment List</label><input id="dp-equipment" placeholder="e.g. Tower Crane, Excavator, Concrete Pump"></div>
+    <div class="grid-2">
+      <div class="form-group"><label>Crew Count</label><input type="number" id="dp-crew" placeholder="0" min="1"></div>
+      <div class="form-group"><label>Mobilization Date</label><input type="date" id="dp-date"></div>
+    </div>
+    <div class="form-group"><label>Site Office Setup</label>
+      <select id="dp-office"><option value="true">Yes – Temporary office required</option><option value="false">No</option></select>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="dp-notes" placeholder="Logistics notes..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitDispatch()">Confirm Dispatch →</button>
+  </div>
+</div>
+
+<!-- UC09 -->
+<div class="modal-overlay" id="modal-progress">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📈 Update Site Progress</div>
+      <button class="modal-close" onclick="closeModal('modal-progress')">✕</button>
+    </div>
+    <div id="prog-alert" class="alert"></div>
+    <div class="form-group"><label>Project</label><select id="pg-project"></select></div>
+    <div class="form-group"><label>Tasks Completed (comma-separated)</label><input id="pg-tasks" placeholder="e.g. Ground floor slab poured, Columns erected"></div>
+    <div class="form-group"><label>Milestone Reached (if any)</label><input id="pg-milestone" placeholder="e.g. Foundation Complete"></div>
+    <div class="grid-2">
+      <div class="form-group"><label>% Overall Completion</label><input type="number" id="pg-pct" min="0" max="100" placeholder="0"></div>
+      <div class="form-group"><label>Actual Cost to Date (R)</label><input type="number" id="pg-cost" placeholder="0"></div>
+    </div>
+    <div class="form-group"><label>Delays / Change Requests</label><textarea id="pg-delays" placeholder="Any delays or scope changes..."></textarea></div>
+    <div class="form-group"><label>Notes</label><textarea id="pg-notes" placeholder="Progress notes for client..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitProgress()">Log Progress Update →</button>
+  </div>
+</div>
+
+<!-- UC13 -->
+<div class="modal-overlay" id="modal-payment">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">💳 Process Milestone Payment</div>
+      <button class="modal-close" onclick="closeModal('modal-payment')">✕</button>
+    </div>
+    <div id="pay-alert" class="alert"></div>
+    <div class="form-group"><label>Project</label><select id="pay-project"></select></div>
+    <div class="form-group"><label>Milestone Being Paid</label><input id="pay-milestone" placeholder="e.g. Foundation Complete"></div>
+    <div class="form-group"><label>Payment Amount (R)</label><input type="number" id="pay-amount" placeholder="0"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitPayment()">Confirm Payment →</button>
+  </div>
+</div>
+
+<!-- UC14 -->
+<div class="modal-overlay" id="modal-completion">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🏆 Issue Completion Certificate</div>
+      <button class="modal-close" onclick="closeModal('modal-completion')">✕</button>
+    </div>
+    <div id="comp-alert" class="alert"></div>
+    <div class="form-group"><label>Project</label><select id="comp-project"></select></div>
+    <div class="form-group"><label>Final Inspection Date</label><input type="date" id="comp-date"></div>
+    <div class="form-group"><label>All Snags Resolved?</label>
+      <select id="comp-snags"><option value="true">Yes – All snags resolved</option><option value="false">No – Outstanding items</option></select>
+    </div>
+    <div class="form-group"><label>Handover Notes</label><textarea id="comp-notes" placeholder="Final handover details, keys, documents..."></textarea></div>
+    <button class="btn btn-success" style="width:100%" onclick="submitCompletion()">🏆 Issue Certificate of Completion</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   STATE & UTILS
+══════════════════════════════════════════════════════ */
+let currentUser = null;
+let projects = [];
+
+const PAGES = [
+  { id:'dashboard',   label:'🏠 Dashboard',    roles:['all'] },
+  { id:'inquiry',     label:'📋 Submit Inquiry',roles:['client','pm'] },
+  { id:'survey',      label:'🔍 Site Survey',   roles:['engineer','pm'] },
+  { id:'boq',         label:'📊 BOQ',           roles:['qs','pm'] },
+  { id:'teams',       label:'👷 Teams',         roles:['resource','pm'] },
+  { id:'agreement',   label:'📝 Agreement',     roles:['pm','client'] },
+  { id:'po',          label:'🛒 Procurement',   roles:['procurement','pm'] },
+  { id:'dispatch',    label:'🚛 Dispatch',      roles:['logistics','pm'] },
+  { id:'progress',    label:'📈 Progress',      roles:['sitemanager','pm','client'] },
+  { id:'payments',    label:'💳 Payments',      roles:['finance','client','pm'] },
+  { id:'completion',  label:'🏆 Completion',    roles:['pm'] },
+];
+
+const fmt = n => 'R ' + Number(n).toLocaleString('en-ZA', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtDate = s => s ? new Date(s).toLocaleDateString('en-ZA') : '—';
+const el = id => document.getElementById(id);
+const show = (id, type='block') => el(id).style.display = type;
+const hide = id => el(id).style.display = 'none';
+
+function alert_(id, msg, type='error') {
+  const e = el(id);
+  e.className = `alert alert-${type} show`;
+  e.textContent = msg;
+  setTimeout(() => e.classList.remove('show'), 4000);
+}
+
+function statusClass(s) {
+  if (!s) return 'default';
+  if (['Construction Active','Contract Signed','Procurement Active','Teams Assigned'].includes(s)) return 'active';
+  if (s === 'Completed') return 'complete';
+  if (['Inquiry Submitted','Agreement Pending'].includes(s)) return 'pending';
+  return 'default';
+}
+
+/* ══════════════════════════════════════════════════════
+   LOGIN / LOGOUT
+══════════════════════════════════════════════════════ */
+function fillEmail(v) { el('login-email').value = v; }
+
+async function doLogin() {
+  const email = el('login-email').value.trim();
+  const password = el('login-password').value.trim();
+  const res = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password})});
+  const data = await res.json();
+  if (data.success) {
+    currentUser = data.user;
+    el('login-screen').classList.add('hidden');
+    show('app'); el('app').classList.add('show');
+    buildNav();
+    renderUserChip();
+    navigate('dashboard');
+    loadProjects();
+    pollNotifications();
+  } else {
+    show('login-alert'); el('login-alert').classList.add('show');
+  }
+}
+
+async function doLogout() {
+  await fetch('/api/logout', {method:'POST'});
+  currentUser = null;
+  el('login-screen').classList.remove('hidden');
+  el('app').classList.remove('show');
+  hide('app');
+}
+
+/* ══════════════════════════════════════════════════════
+   NAV
+══════════════════════════════════════════════════════ */
+function buildNav() {
+  const nav = el('topbar-nav');
+  nav.innerHTML = '';
+  PAGES.forEach(p => {
+    if (p.roles.includes('all') || p.roles.includes(currentUser.role)) {
+      const btn = document.createElement('button');
+      btn.className = 'nav-btn';
+      btn.id = `nav-${p.id}`;
+      btn.textContent = p.label;
+      btn.onclick = () => navigate(p.id);
+      nav.appendChild(btn);
+    }
+  });
+}
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const pg = el(`page-${page}`);
+  if (pg) { pg.classList.add('active'); }
+  const nb = el(`nav-${page}`);
+  if (nb) nb.classList.add('active');
+  loadPage(page);
+}
+
+function renderUserChip() {
+  el('user-name-display').textContent = currentUser.name;
+  el('user-role-display').textContent = currentUser.role;
+  el('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+}
+
+/* ══════════════════════════════════════════════════════
+   DATA LOAD
+══════════════════════════════════════════════════════ */
+async function api(url, opts={}) {
+  const res = await fetch(url, {headers:{'Content-Type':'application/json'}, ...opts});
+  return res.json();
+}
+
+async function loadProjects() {
+  projects = await api('/api/projects');
+}
+
+async function loadPage(page) {
+  if (page === 'dashboard')  await renderDashboard();
+  if (page === 'inquiry')    await renderInquiry();
+  if (page === 'survey')     await renderSurvey();
+  if (page === 'boq')        await renderBOQ();
+  if (page === 'teams')      await renderTeams();
+  if (page === 'agreement')  await renderAgreement();
+  if (page === 'po')         await renderPO();
+  if (page === 'dispatch')   await renderDispatch();
+  if (page === 'progress')   await renderProgress();
+  if (page === 'payments')   await renderPayments();
+  if (page === 'completion') await renderCompletion();
+}
+
+/* ══════════════════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════════════════ */
+async function renderDashboard() {
+  const d = await api('/api/dashboard');
+  el('dash-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${d.total_projects}</div><div class="stat-label">Total Projects</div></div>
+    <div class="stat-card green"><div class="stat-val">${d.active}</div><div class="stat-label">Active</div></div>
+    <div class="stat-card blue"><div class="stat-val">${d.completed}</div><div class="stat-label">Completed</div></div>
+    <div class="stat-card rust"><div class="stat-val">${d.pending}</div><div class="stat-label">Pending</div></div>
+    <div class="stat-card"><div class="stat-val">${fmt(d.total_revenue)}</div><div class="stat-label">Revenue Received</div></div>
+  `;
+  el('dash-projects').innerHTML = d.recent_projects.length ? d.recent_projects.map(p=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--mist);">
+      <div>
+        <div style="font-weight:600;font-size:.9rem;">${p.title}</div>
+        <div style="color:var(--mid);font-size:.78rem;">${p.location}</div>
+      </div>
+      <span class="badge badge-${statusClass(p.status)==='active'?'green':statusClass(p.status)==='complete'?'blue':'amber'}">${p.status}</span>
+    </div>`).join('') : '<div class="empty"><div class="empty-icon">📂</div><div class="empty-text">No projects yet</div></div>';
+
+  const pipeline = el('dash-pipeline');
+  const stages = ['Inquiry Submitted','Survey Completed','BOQ Generated','Teams Assigned','Agreement Pending','Contract Signed','Procurement Active','Construction Active','Completed'];
+  pipeline.innerHTML = stages.map(s => {
+    const count = (d.statuses||{})[s] || 0;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--mist);font-size:.84rem;">
+      <span style="color:var(--mid)">${s}</span>
+      <span style="font-family:'Syne',sans-serif;font-weight:700;${count?'color:var(--amber)':''}">${count}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   UC01 INQUIRY
+══════════════════════════════════════════════════════ */
+async function renderInquiry() {
+  await loadProjects();
+  el('inquiry-table').innerHTML = projects.length ? projects.map(p=>`
+    <tr>
+      <td><strong>${p.title}</strong><div style="font-size:.78rem;color:var(--mid)">${p.description||''}</div></td>
+      <td>${p.location}</td>
+      <td>${fmt(p.budget)}</td>
+      <td>${fmtDate(p.deadline)}</td>
+      <td><span class="badge badge-${statusClass(p.status)==='active'?'green':statusClass(p.status)==='complete'?'blue':'amber'}">${p.status}</span></td>
+      <td>${fmtDate(p.created_at)}</td>
+    </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--mid);padding:32px">No project inquiries submitted</td></tr>';
+}
+
+async function submitInquiry() {
+  const data = { title:el('inq-title').value, location:el('inq-location').value, scope:el('inq-scope').value,
+    budget:el('inq-budget').value, deadline:el('inq-deadline').value, description:el('inq-desc').value };
+  if (!data.title||!data.location||!data.budget) return alert_('inquiry-alert','Please fill in all required fields.');
+  const r = await api('/api/projects', {method:'POST', body:JSON.stringify(data)});
+  if (r.success) { closeModal('modal-inquiry'); await loadProjects(); renderInquiry(); renderDashboard(); }
+  else alert_('inquiry-alert', r.error||'Error submitting inquiry.');
+}
+
+/* ══════════════════════════════════════════════════════
+   UC02 SURVEY
+══════════════════════════════════════════════════════ */
+async function renderSurvey() {
+  const surveys = await api('/api/surveys');
+  await loadProjects();
+  const pMap = Object.fromEntries(projects.map(p=>[p.id, p.title]));
+  el('survey-table').innerHTML = surveys.length ? surveys.map(s=>`
+    <tr>
+      <td><strong>${pMap[s.project_id]||s.project_id}</strong></td>
+      <td>${s.terrain}</td><td>${s.soil_conditions}</td><td>${s.utility_access}</td>
+      <td><span class="badge badge-green">${s.status}</span></td>
+      <td>${fmtDate(s.created_at)}</td>
+    </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--mid);padding:32px">No surveys recorded</td></tr>';
+  populateSelect('srv-project', projects);
+}
+
+async function submitSurvey() {
+  const data = { project_id:el('srv-project').value, terrain:el('srv-terrain').value,
+    soil_conditions:el('srv-soil').value, utility_access:el('srv-utility').value,
+    risks:el('srv-risks').value, notes:el('srv-notes').value };
+  const r = await api('/api/surveys', {method:'POST', body:JSON.stringify(data)});
+  if (r.success) { closeModal('modal-survey'); renderSurvey(); }
+  else alert_('survey-alert', r.error||'Error.');
+}
+
+/* ══════════════════════════════════════════════════════
+   UC03 BOQ
+══════════════════════════════════════════════════════ */
+let boqItems = [];
+function addBOQItem() {
+  const id = Date.now();
+  boqItems.push(id);
+  const row = document.createElement('div');
+  row.className = 'boq-item-row'; row.id = `bi-${id}`;
+  row.innerHTML = `
+    <input placeholder="Material description" id="bi-desc-${id}" oninput="calcBOQ()">
+    <input type="number" placeholder="Qty" id="bi-qty-${id}" oninput="calcBOQ()">
+    <input placeholder="Unit" id="bi-unit-${id}" value="m³">
+    <input type="number" placeholder="Rate (R)" id="bi-rate-${id}" oninput="calcBOQ()">
+    <button class="btn btn-sm" style="background:var(--rust);color:#fff;padding:8px;" onclick="removeBOQItem(${id})">✕</button>`;
+  el('boq-items').appendChild(row);
+}
+function removeBOQItem(id) {
+  boqItems = boqItems.filter(i=>i!==id);
+  const e = el(`bi-${id}`); if(e) e.remove();
+  calcBOQ();
+}
+function calcBOQ() {
+  let sub = 0;
+  boqItems.forEach(id => {
+    const q = parseFloat(el(`bi-qty-${id}`)?.value)||0;
+    const r = parseFloat(el(`bi-rate-${id}`)?.value)||0;
+    sub += q*r;
+  });
+  sub += (parseFloat(el('boq-labour')?.value)||0) + (parseFloat(el('boq-machinery')?.value)||0);
+  const ovPct = parseFloat(el('boq-overhead')?.value)||10;
+  const ov = sub*(ovPct/100) + sub*0.05;
+  el('boq-sub').textContent = fmt(sub);
+  el('boq-ov').textContent = fmt(ov);
+  el('boq-total').textContent = fmt(sub+ov);
+}
+
+async function renderBOQ() {
+  const boqs = await api('/api/boqs');
+  await loadProjects();
+  const pMap = Object.fromEntries(projects.map(p=>[p.id, p.title]));
+  el('boq-table').innerHTML = boqs.length ? boqs.map(b=>`
+    <tr>
+      <td><strong>${pMap[b.project_id]||b.project_id}</strong></td>
+      <td>${b.items.length} items</td>
+      <td>${fmt(b.labour_cost)}</td>
+      <td>${b.overhead_pct}% + 5% cont.</td>
+      <td style="font-weight:700;color:var(--amber)">${fmt(b.total)}</td>
+      <td>${fmtDate(b.created_at)}</td>
+    </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--mid);padding:32px">No BOQs generated</td></tr>';
+  populateSelect('boq-project', projects);
+}
+
+async function submitBOQ() {
+  const items = boqItems.map(id => ({
+    desc: el(`bi-desc-${id}`)?.value,
+    qty: parseFloat(el(`bi-qty-${id}`)?.value)||0,
+    unit: el(`bi-unit-${id}`)?.value,
+    rate: parseFloat(el(`bi-rate-${id}`)?.value)||0,
+    total: (parseFloat(el(`bi-qty-${id}`)?.value)||0)*(parseFloat(el(`bi-rate-${id}`)?.value)||0),
+  }));
+  const data = { project_id:el('boq-project').value, items,
+    labour_cost:el('boq-labour').value, machinery_cost:el('boq-machinery').value,
+    overhead_pct:el('boq-overhead').value };
+  const r = await api('/api/boqs', {method:'POST', body:JSON.stringify(data)});
+  if (r.success) { closeModal('modal-boq'); boqItems=[]; el('boq-items').innerHTML=''; renderBOQ(); }
+  else alert_('boq-alert', r.error||'Error.');
+}
+
+/* ══════════════════════════════════════════════════════
+   UC04 TEAMS
+══════════════════════════════════════════════════════ */
+async function renderTeams() {
+  const teams = await api('/api/teams');
+  await loadProjects();
+  const pMap = Object.fromEntries(projects.map(p=>[p.id, p.title]));
+  el('teams-table').innerHTML = teams.length ? teams.map(t=>`
+    <tr>
+      <td><strong>${pMap[t.project_id]||t.project_id}</strong></td>
+      <td>${Array.isArray(t.crews)?t.crews.join(', '):t.crews}</td>
+      <td>${Array.isArray(t.machinery)?t.machinery.join(', '):t.machinery}</td>
+      <td>${Array.isArray(t.managers)?t.managers.join(', '):t.managers}</td>
+      <td>${fmtDate(t.start_date)}</td>
+    </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--mid);padding:32px">No team assignments yet</td></tr>';
+  populateSelect('tm-project', projects);
+}
+
+async function submitTeams() {
+  const data = { project_id:el('tm-project').value,
+    crews:el('tm-crews').value.split(',').map(s=>s.trim()).filter(Boolean),
+    machinery:el('tm-machinery').value.split(',').map(s=>s.trim()).filter(Boolean),
+    managers:el('tm-managers').value.split(',').map(s=>s.trim()).filter(Boolean),
+    start_date:el('tm-start').value, notes:el('tm-notes').value };
+  const r = await api('/api/teams', {method:'POST', body:JSON.stringify(data)});
+  if (r.success) { closeModal('modal-teams'); renderTeams(); }
+  else alert_('teams-alert', r.error||'Error.');
+}
+
+/* ══════════════════════════════════════════════════════
+   UC05 AGREEMENT
+══════════════════════════════════════════════════════ */
+async function renderAgreement() {
+  const agreements = await api('/api/agreements');
+  await loadProjects();
+  const pMap = Object.fromEntries(projects.map(p=>[p.id, p.title]));
+  el('agreement-table').innerHTML = agreements.length ? agreements.map(a=>`
+    <tr>
+      <td><strong>${pMap[a.project_id]||a.project_id}</strong></td>
+      <td>${fmt(a.total_value)}</td>
+      <td style="font-size:.8rem">${a.payment_terms}</td>
+      <td><span class="badge ${a.signed_by_client?'badge-green':'badge-amber'}">${a.status}</span></td>
+      <td>${!a.signed_by_client && currentUser.role==='client'
+        ? `<button class="btn btn-success btn-sm" onclick="signAgreement('${a.id}')">✍️ Sign</button>`
+        : a.signed_by_client ? `<span style="color:var(--sage);font-size:.8rem">✓ Signed ${fmtDate(a.signed_at)}</span>` : '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--mid);padding:32px">No agreements created</td></tr>';
+  populateSelect('agr-project', projects);
+}
+
+async function signAgreement(id) {
+  const r = await api(`/api/agreements/${id}/sign`, {method:'POST'});
+  if (r.success) renderAgreement();
+}
+
+async function submitAgreement() {
+  const ms = el('agr-milestones').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const data = { project_id:el('agr-project').value, payment_terms:el('agr-terms').value,
+    milestones:ms, warranties:el('agr-warranties').value };
+  const r = await api('/api/agreements', {method:'POST', body:JSON.stringify(data)});
+  if (r.success) { closeModal('modal-agreement'); renderAgreement(); }
+  else alert_('agr-alert', r.error||'Error.');
+}
+
+/* ══════════════════════════════════════════════════════
+   UC07 PO
+══════════════════════════════════════════════════════ */
+async function renderPO() {
+  const pos = await api('/api/purchase-orders');
+  await loadProjects();
+  const pMap = Object.fromEntries(projects.map(p=>[p.id, p.title]));
+  el('po-table').innerHTML = pos.length ? pos.map(p=>`
+    <tr>
+      <td><strong>${pMap[p.project_id]||p.project_id}</strong></td>
+      <td>${p.supplier}</td>
+      <td style="font-size:.8rem">${Array.isArray(p.items)?p.items.join(', '):p.items}</td>
+      <td>${fmt(p.total)}</td>
+      <td>${fmtDate(p.delivery_date)}</td>
+      <td><span class="badge badge-blue">${p.status}</span></td>
+    </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--mid);padding:32px">No purchase orders</td></tr>';
+  populateSelect('po-project', projects);
+}
+
+async function submitPO() {
+  const data = { project_id:el('po-project').value, supplier:el('po-supplier').value,
+    items:el('po-items').value.split(',').map(s=>s.trim()).filter(Boolean),
+    total:el('po-total').value, delivery_date:el('po-delivery').value };
+  const r = await api('/api/purchase-orders', {method:'POST', body:JSON.stringify(data)});
+  if (r.success) { closeModal('modal-po'); renderPO(); }
+  else alert_('po-alert', r.error||'Error.');
+}
+
+/* ══════════════════════════════════════════════════════
+   UC08 DISPATCH
+══════════════════════════════════════════════════════ */
+async function renderDispatch() {
+  const disps = await api('/api/dispatches');
+  await loadProjects();
+  const pMap = Object.fromEntries(projects.map(p=>[p.id, p.title]));
+  el('dispatch-table').innerHTML = disps.length ? disps.map(d=>`
+    <tr>
+      <td><strong>${pMap[d.project_id]||d.project_id}</strong></td>
+      <td style="font-size:.8rem">${Array.isArray(d.equipment)?d.equipment.join(', '):d.equipment}</td>
+      <td>${d.crew_count} workers</td>
+      <td>${fmtDate(d.mobilization_date)}</td>
+      <td><span class="badge badge-green">${d.status}</span></td>
+    </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--mid);padding:32px">No dispatches logged</td></tr>';
+  populateSelect('dp-project', projects);
+}
+
+async function submitDispatch() {
+  const data = { project_id:el('dp-project').value,
+    equipment:el('dp-equipment').value.split(',').map(s=>s.trim()).filter(Boolean),
+    crew_count:el('dp-crew').value, mobilization_date:el('dp-date').value,
+    site_office:el('dp-office').value==='true', notes:el('dp-notes').value };
+  const r = await api('/api/dispatches', {method:'POST', body:JSON.stringify(data)});
+  if (r.success) { closeModal('modal-dispatch'); renderDispatch(); }
+  else alert_('dispatch-alert', r.error||'Error.');
+}
+
+/* ══════════════════════════════════════════════════════
+   UC09 PROGRESS
+══════════════════════════════════════════════════════ */
+async function renderProgress() {
+  const updates = await api('/api/progress');
+  await loadProjects();
+  const pMap = Object.fromEntries(projects.map(p=>[p.id, p]));
+  if (!updates.length) {
+    el('progress-list').innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No progress updates logged yet</div></div>';
+  } else {
+    const grouped = {};
+    updates.forEach(u => { if(!grouped[u.project_id]) grouped[u.project_id]=[]; grouped[u.project_id].push(u); });
+    el('progress-list').innerHTML = Object.entries(grouped).map(([pid,ups])=>{
+      const proj = pMap[pid];
+      return `<div class="card" style="margin-bottom:20px;">
+        <div class="card-title">📍 ${proj?proj.title:pid} <span style="font-family:'DM Sans';font-weight:400;font-size:.82rem;color:var(--mid);margin-left:8px">${proj?proj.location:''}</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${proj?.progress||0}%"></div></div>
+        <div style="font-size:.78rem;color:var(--mid);margin-bottom:16px;margin-top:4px">${proj?.progress||0}% complete</div>
+        <div class="timeline">${ups.slice().reverse().map(u=>`
+          <div class="tl-item">
+            <div class="tl-dot ${u.milestone?'done':''}"></div>
+            <div class="tl-content">
+              <div class="tl-title">${u.milestone||'Progress Update'} — ${u.pct_complete}%</div>
+              <div class="tl-meta">${fmtDate(u.created_at)} · Cost to date: ${fmt(u.actual_cost)}</div>
+              ${u.tasks_completed?.length?`<div style="font-size:.8rem;color:var(--mid);margin-top:4px">✓ ${Array.isArray(u.tasks_completed)?u.tasks_completed.join(' · '):u.tasks_completed}</div>`:''}
+              ${u.delays?`<div style="font-size:.8rem;color:var(--rust);margin-top:3px">⚠ ${u.delays}</div>`:''}
+            </div>
+          </div>`).join('')}</div>
+      </div>`;
+    }).join('');
+  }
+  populateSelect('pg-project', projects);
+}
+
+async function submitProgress() {
+  const data = { project_id:el('pg-project').value,
+    tasks_completed:el('pg-tasks').value.split(',').map(s=>s.trim()).filter(Boolean),
+    milestone:el('pg-milestone').value, pct_complete:el('pg-pct').value,
+    actual_cost:el('pg-cost').value, delays:el('pg-delays').value, notes:el('pg-notes').value };
+  const r = await api('/api/progress', {method:'POST', body:JSON.stringify(data)});
+  if (r.success) { closeModal('modal-progress'); await loadProjects(); renderProgress(); }
+  else alert_('prog-alert', r.error||'Error.');
+}
+
+/* ══════════════════════════════════════════════════════
+   UC13 PAYMENTS
+══════════════════════════════════════════════════════ */
+async function renderPayments() {
+  const payments = await api('/api/payments');
+  await loadProjects();
+  const pMap = Object.fromEntries(projects.map(p=>[p.id, p.title]));
+  el('payments-table').innerHTML = payments.length ? payments.map(p=>`
+    <tr>
+      <td style="font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;">${p.invoice_number}</td>
+      <td><strong>${pMap[p.project_id]||p.project_id}</strong></td>
+      <td>${p.milestone}</td>
+      <td style="font-weight:700;color:var(--sage)">${fmt(p.amount)}</td>
+      <td><span class="badge badge-green">${p.status}</span></td>
+      <td>${fmtDate(p.paid_at)}</td>
+    </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--mid);padding:32px">No payments processed</td></tr>';
+  populateSelect('pay-project', projects);
+}
+
+async function submitPayment() {
+  const data = { project_id:el('pay-project').value, milestone:el('pay-milestone').value,
+    amount:el('pay-amount').value };
+  if (!data.milestone||!data.amount) return alert_('pay-alert','Fill in all fields.');
+  const r = await api('/api/payments', {method:'POST', body:JSON.stringify(data)});
+  if (r.success) { closeModal('modal-payment'); renderPayments(); renderDashboard(); }
+  else alert_('pay-alert', r.error||'Error.');
+}
+
+/* ══════════════════════════════════════════════════════
+   UC14 COMPLETION
+══════════════════════════════════════════════════════ */
+async function renderCompletion() {
+  const certs = await api('/api/completions');
+  await loadProjects();
+  const pMap = Object.fromEntries(projects.map(p=>[p.id, p.title]));
+  el('completion-table').innerHTML = certs.length ? certs.map(c=>`
+    <tr>
+      <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--amber)">${c.cert_number}</td>
+      <td><strong>${pMap[c.project_id]||c.project_id}</strong></td>
+      <td>${fmtDate(c.final_inspection_date)}</td>
+      <td style="font-size:.8rem">${c.handover_notes||'—'}</td>
+      <td>${fmtDate(c.issued_at)}</td>
+    </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--mid);padding:32px">No completion certificates issued</td></tr>';
+  populateSelect('comp-project', projects);
+}
+
+async function submitCompletion() {
+  const data = { project_id:el('comp-project').value, inspection_date:el('comp-date').value,
+    snags_resolved:el('comp-snags').value==='true', handover_notes:el('comp-notes').value };
+  const r = await api('/api/completions', {method:'POST', body:JSON.stringify(data)});
+  if (r.success) { closeModal('modal-completion'); await loadProjects(); renderCompletion(); renderDashboard(); }
+  else alert_('comp-alert', r.error||'Error.');
+}
+
+/* ══════════════════════════════════════════════════════
+   NOTIFICATIONS
+══════════════════════════════════════════════════════ */
+function toggleNotif() {
+  const panel = el('notif-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) loadNotifications();
+}
+
+async function loadNotifications() {
+  const notifs = await api('/api/notifications');
+  const unread = notifs.filter(n=>!n.read).length;
+  const badge = el('notif-badge');
+  if (unread > 0) { badge.textContent = unread; show('notif-badge','inline-block'); }
+  else hide('notif-badge');
+  el('notif-list').innerHTML = notifs.length ? notifs.map(n=>`
+    <div class="notif-item ${n.read?'':'unread'}">
+      ${!n.read?'<span class="notif-dot"></span>':''}${n.message}
+      <div class="notif-time">${fmtDate(n.timestamp)}</div>
+    </div>`).join('') : '<div style="padding:20px;text-align:center;color:var(--mid);font-size:.85rem">No notifications</div>';
+}
+
+async function markAllRead() {
+  await api('/api/notifications/read', {method:'POST'});
+  loadNotifications();
+}
+
+async function pollNotifications() {
+  const data = await api('/api/me');
+  const badge = el('notif-badge');
+  if (data.unread > 0) { badge.textContent = data.unread; show('notif-badge','inline-block'); }
+  else hide('notif-badge');
+  setTimeout(pollNotifications, 15000);
+}
+
+/* ══════════════════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════════════════ */
+function openModal(id) {
+  el(id).classList.add('open');
+  populateAllSelects();
+}
+function closeModal(id) { el(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+function populateSelect(id, projs) {
+  const sel = el(id);
+  if (!sel) return;
+  sel.innerHTML = projs.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
+}
+
+async function populateAllSelects() {
+  if (!projects.length) await loadProjects();
+  ['srv-project','boq-project','tm-project','agr-project','po-project','dp-project','pg-project','pay-project','comp-project'].forEach(id => {
+    populateSelect(id, projects);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   KEYBOARD + INIT
+══════════════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+});
+el('login-password').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h2><i class="fas fa-user-cog"></i> {{ employee_type|replace('_', ' ')|title }} Dashboard</h2>
+    <p>Welcome, {{ current_user.username }}. Your submissions save to the same central project records used by the rest of the team.</p>
+
+    <div class="actions-grid">
+        {% if module_endpoint %}
+        <div class="action-card primary">
+            <i class="fas fa-arrow-right"></i>
+            <h3>Open My Module</h3>
+            <p>Continue your assigned workflow.</p>
+            <a href="{{ url_for(module_endpoint) }}" class="action-btn">Open</a>
+        </div>
+        {% endif %}
+
+        {% if current_user.employee_type in ['engineer', 'site_manager', 'survey_operator'] %}
+        <div class="action-card"><i class="fas fa-map-marked-alt"></i><h3>Site Survey</h3><p>Capture field data</p><a href="{{ url_for('site_survey') }}" class="action-btn">Go</a></div>
+        {% endif %}
+        {% if current_user.employee_type in ['engineer', 'site_manager'] %}
+        <div class="action-card"><i class="fas fa-chart-line"></i><h3>Progress</h3><p>Update project progress</p><a href="{{ url_for('progress') }}" class="action-btn">Go</a></div>
+        {% endif %}
+        {% if current_user.employee_type == 'quantity_surveyor' %}
+        <div class="action-card"><i class="fas fa-calculator"></i><h3>BOQ</h3><p>Create Bill of Quantities</p><a href="{{ url_for('boq') }}" class="action-btn">Go</a></div>
+        {% endif %}
+        {% if current_user.employee_type == 'resource_manager' %}
+        <div class="action-card"><i class="fas fa-users"></i><h3>Resources</h3><p>Allocate teams and machinery</p><a href="{{ url_for('team') }}" class="action-btn">Go</a></div>
+        {% endif %}
+        {% if current_user.employee_type == 'procurement_officer' %}
+        <div class="action-card"><i class="fas fa-file-invoice"></i><h3>Procurement</h3><p>Create purchase orders</p><a href="{{ url_for('orders') }}" class="action-btn">Go</a></div>
+        {% endif %}
+        {% if current_user.employee_type == 'logistics_coordinator' %}
+        <div class="action-card"><i class="fas fa-truck-moving"></i><h3>Logistics</h3><p>Dispatch crew and equipment</p><a href="{{ url_for('dispatch') }}" class="action-btn">Go</a></div>
+        {% endif %}
+        {% if current_user.employee_type in ['safety_officer', 'site_manager'] %}
+        <div class="action-card"><i class="fas fa-shield-alt"></i><h3>Safety</h3><p>Submit safety audits</p><a href="{{ url_for('safety') }}" class="action-btn">Go</a></div>
+        {% endif %}
+        {% if current_user.employee_type == 'finance_officer' %}
+        <div class="action-card"><i class="fas fa-credit-card"></i><h3>Payments</h3><p>Record milestone payments</p><a href="{{ url_for('payments') }}" class="action-btn">Go</a></div>
+        {% endif %}
+    </div>
+
+    {% if tasks %}
+    <section class="dashboard-section">
+        <h3>Recent Assigned Records</h3>
+        <table class="data-table">
+            <thead><tr><th>Reference</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td>{{ task.location or task.site_location or task.id }}</td>
+                    <td>{{ task.status }}</td>
+                    <td>{{ (task.created_at or task.timestamp or task.audit_date or '')[:10] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endif %}
+</div>
+
+<style>
+    .dashboard-container { max-width: 1200px; margin: 0 auto; }
+    .actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; margin: 2rem 0; }
+    .action-card, .dashboard-section { background: white; border-radius: 18px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .action-card { text-align: center; }
+    .action-card.primary { border: 2px solid #e67e22; }
+    .action-card i { font-size: 2rem; color: #e67e22; }
+    .action-card p { color: #666; }
+    .action-btn { display: inline-block; background: #e67e22; color: white; padding: 8px 18px; border-radius: 30px; text-decoration: none; font-weight: 700; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #eee; }
+</style>
+{% endblock %}

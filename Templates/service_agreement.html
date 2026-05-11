@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="agreement-wrapper">
+    <div class="agreement-header">
+        <h2><i class="fas fa-file-signature"></i> Digital Service Agreement</h2>
+        <p class="agreement-subtitle">Generate contract, add PM signature, and send to client</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="agreement-form" id="agreementForm">
+        <!-- Step progress indicator -->
+        <div class="step-progress">
+            <div class="step-progress-item active" data-step="1">1. Generate Contract</div>
+            <div class="step-progress-item" data-step="2">2. Legal & Scope</div>
+            <div class="step-progress-item" data-step="3">3. PM Signature</div>
+            <div class="step-progress-item" data-step="4">4. Send to Client</div>
+        </div>
+
+        <!-- STEP 1: Generate contract with milestones and payment terms -->
+        <div class="form-card" id="step1">
+            <div class="card-header">
+                <span class="step-badge">Step 1</span>
+                <h3>Generate digital contract with milestones & payment terms</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Contract title / project name</label>
+                    <input type="text" name="contract_title" placeholder="e.g., Construction of ABC Mall" required>
+                </div>
+                <div class="form-row two-cols">
+                    <div class="form-group">
+                        <label>Contract number (auto)</label>
+                        <input type="text" name="contract_number" value="CON-{{ range(1000,9999)|random }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Contract date</label>
+                        <input type="date" name="contract_date" value="{{ now.strftime('%Y-%m-%d') if now else '' }}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Project milestones (list with due dates)</label>
+                    <textarea name="milestones" rows="3" placeholder="Example:&#10;1. Site preparation – 15 May 2026 – R50,000&#10;2. Foundation – 30 June 2026 – R80,000&#10;3. Framing – 15 Aug 2026 – R100,000"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Payment terms (installments, due dates, methods)</label>
+                    <textarea name="payment_terms" rows="3" placeholder="e.g., 30% advance, 40% on milestone 2, 30% on completion"></textarea>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-next" data-next="2">Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 2: Legal warranties and project scope -->
+        <div class="form-card" id="step2" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 2</span>
+                <h3>Include legal warranties & project scope</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Project scope (detailed description)</label>
+                    <textarea name="project_scope" rows="3" placeholder="Describe deliverables, exclusions, assumptions" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Warranties & guarantees</label>
+                    <textarea name="warranties" rows="3" placeholder="e.g., 12 months defect liability period, material warranties, workmanship guarantee"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Legal clauses (indemnity, dispute resolution, termination)</label>
+                    <textarea name="legal_clauses" rows="3" placeholder="Include standard legal terms"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Upload additional legal documents (PDF)</label>
+                    <input type="file" name="legal_docs" accept=".pdf" multiple>
+                    <small>e.g., insurance certificates, compliance documents</small>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="1">← Back</button>
+                <button type="button" class="btn-next" data-next="3">Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 3: Project Manager Signature (instead of client) -->
+        <div class="form-card" id="step3" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 3</span>
+                <h3>Project Manager Signature</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>PM name / title</label>
+                    <input type="text" name="pm_name" placeholder="Your full name" required>
+                </div>
+                <div class="form-group">
+                    <label>Digital signature method</label>
+                    <select name="pm_signature_method">
+                        <option value="esign">E‑sign (type name)</option>
+                        <option value="upload">Upload signed PDF (with PM signature)</option>
+                    </select>
+                </div>
+                <div id="pmUploadSignature" style="display: none;">
+                    <div class="form-group">
+                        <label>Upload signed agreement (PDF) – PM signature</label>
+                        <input type="file" name="pm_signed_agreement" accept=".pdf">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Signature date</label>
+                    <input type="date" name="pm_signature_date">
+                </div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="pm_confirmed" value="yes" required> I confirm that the contract terms are accurate and I approve this agreement.</label>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="2">← Back</button>
+                <button type="button" class="btn-next" data-next="4">Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 4: Send document to client (instead of authorize work) -->
+        <div class="form-card" id="step4" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 4</span>
+                <h3>Send the signed agreement to client</h3>
+            </div>
+            <div class="card-body">
+                <!-- List of clients who submitted project inquiries -->
+                <div class="form-group">
+                    <label><i class="fas fa-users"></i> Select client from project inquiries</label>
+                    <select name="client_id" id="clientSelect" required>
+                        <option value="">-- Choose a client --</option>
+                        {% for inquiry in project_inquiries %}
+                        <option value="{{ inquiry.id }}" data-email="{{ inquiry.client_email }}" data-name="{{ inquiry.client_name }}" data-phone="{{ inquiry.client_phone or '' }}" data-scope="{{ inquiry.project_scope|e }}">
+                            {{ inquiry.client_name }} ({{ inquiry.client_email }}) - {{ inquiry.project_scope[:50] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Client email (auto‑filled, can edit)</label>
+                    <input type="email" name="client_email" id="clientEmail" placeholder="client@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Client name (auto‑filled, can edit)</label>
+                    <input type="text" name="client_name" id="clientName" placeholder="Client name" required>
+                </div>
+                <div class="form-group">
+                    <label>Client phone (optional)</label>
+                    <input type="tel" name="client_phone" id="clientPhone" placeholder="+27 ...">
+                </div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="send_sms" value="yes"> Send SMS notification too</label>
+                </div>
+                <div class="form-group">
+                    <label>Message to client (optional)</label>
+                    <textarea name="email_message" rows="3" placeholder="Dear client, please find attached the signed service agreement..."></textarea>
+                </div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="send_copy" value="yes" checked> Send a copy to my email as well</label>
+                </div>
+                <div class="form-group">
+                    <label>Send method</label>
+                    <select name="send_method">
+                        <option value="email">Send via email (simulated)</option>
+                        <option value="portal">Notify via client portal</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="3">← Back</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Send Agreement to Client</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Multi-step navigation
+    const steps = [1, 2, 3, 4];
+    let currentStep = 1;
+
+    function showStep(step) {
+        steps.forEach(s => {
+            const card = document.getElementById(`step${s}`);
+            if (card) card.style.display = s === step ? 'block' : 'none';
+        });
+        document.querySelectorAll('.step-progress-item').forEach((item, idx) => {
+            const stepNum = idx + 1;
+            if (stepNum <= step) item.classList.add('active');
+            else item.classList.remove('active');
+        });
+        currentStep = step;
+    }
+
+    document.querySelectorAll('.btn-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const next = parseInt(btn.getAttribute('data-next'));
+            if (next) showStep(next);
+        });
+    });
+    document.querySelectorAll('.btn-prev').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const prev = parseInt(btn.getAttribute('data-prev'));
+            if (prev) showStep(prev);
+        });
+    });
+
+    // Show/hide PM upload field based on signature method
+    const pmSigMethod = document.querySelector('select[name="pm_signature_method"]');
+    const pmUploadDiv = document.getElementById('pmUploadSignature');
+    if (pmSigMethod && pmUploadDiv) {
+        pmSigMethod.addEventListener('change', () => {
+            pmUploadDiv.style.display = pmSigMethod.value === 'upload' ? 'block' : 'none';
+        });
+    }
+
+    // Auto-fill client email/name when selection changes
+    const clientSelect = document.getElementById('clientSelect');
+    const clientEmailInput = document.getElementById('clientEmail');
+    const clientNameInput = document.getElementById('clientName');
+    const clientPhoneInput = document.getElementById('clientPhone');
+    const scopeInput = document.querySelector('textarea[name="project_scope"]');
+    if (clientSelect) {
+        clientSelect.addEventListener('change', () => {
+            const selected = clientSelect.options[clientSelect.selectedIndex];
+            if (selected && selected.value) {
+                clientEmailInput.value = selected.getAttribute('data-email') || '';
+                clientNameInput.value = selected.getAttribute('data-name') || '';
+                clientPhoneInput.value = selected.getAttribute('data-phone') || '';
+                scopeInput.value = selected.getAttribute('data-scope') || scopeInput.value;
+            } else {
+                clientEmailInput.value = '';
+                clientNameInput.value = '';
+                clientPhoneInput.value = '';
+            }
+        });
+    }
+</script>
+
+<style>
+    .agreement-wrapper {
+        max-width: 950px;
+        margin: 2rem auto;
+        background: #fff;
+        border-radius: 32px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        padding: 2rem;
+    }
+    .agreement-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .agreement-header h2 {
+        font-size: 1.8rem;
+        color: #e67e22;
+        margin-bottom: 0.3rem;
+    }
+    .agreement-subtitle {
+        color: #777;
+        border-left: 3px solid #e67e22;
+        padding-left: 1rem;
+        display: inline-block;
+    }
+    .step-progress {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 0.8rem;
+    }
+    .step-progress-item {
+        flex: 1;
+        text-align: center;
+        font-weight: 600;
+        color: #aaa;
+        position: relative;
+        font-size: 0.9rem;
+    }
+    .step-progress-item.active {
+        color: #e67e22;
+    }
+    .step-progress-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #e67e22;
+        border-radius: 3px;
+    }
+    .form-card {
+        background: #fefcf8;
+        border-radius: 24px;
+        padding: 1.5rem;
+        transition: 0.2s;
+    }
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #f0e3d0;
+        padding-bottom: 0.8rem;
+    }
+    .step-badge {
+        background: #e67e22;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    .card-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+    }
+    .form-row {
+        margin-bottom: 1rem;
+    }
+    .two-cols {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .two-cols .form-group {
+        flex: 1;
+    }
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    .form-group label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.4rem;
+        color: #2c2c2c;
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        font-family: inherit;
+        transition: 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: #e67e22;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+    }
+    .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    .checkbox-group label {
+        font-weight: normal;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    small {
+        display: block;
+        color: #888;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1.8rem;
+        gap: 1rem;
+    }
+    .btn-next, .btn-prev, .btn-submit {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 40px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-next {
+        background: #e67e22;
+        color: white;
+    }
+    .btn-next:hover {
+        background: #f39c12;
+        transform: translateX(2px);
+    }
+    .btn-prev {
+        background: #f0f0f0;
+        color: #555;
+    }
+    .btn-prev:hover {
+        background: #e0e0e0;
+    }
+    .btn-submit {
+        background: #27ae60;
+        color: white;
+        margin-left: auto;
+    }
+    .btn-submit:hover {
+        background: #2ecc71;
+    }
+    @media (max-width: 700px) {
+        .agreement-wrapper { padding: 1rem; }
+        .step-progress-item { font-size: 0.7rem; }
+        .two-cols { flex-direction: column; gap: 0; }
+        .card-footer { flex-direction: column; }
+        .btn-submit { margin-left: 0; }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MUHLE CONSTRUCTION • Construction Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --orange: #FF6B00;
+      --orange-hot: #FF9A00;
+      --black: #0A0A0A;
+      --dark: #111214;
+      --charcoal: #1C1E22;
+      --steel: #2A2D32;
+      --ash: #8A8F9A;
+      --light: #F0EDE8;
+      --white: #FFFFFF;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* ─── NOISE OVERLAY ─── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.35;
+    }
+
+    /* ─── NAVBAR ─── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px;
+      height: 72px;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,107,0,0.15);
+      animation: slideDown 0.6s ease both;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .nav-logo {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .nav-logo .icon {
+      width: 36px; height: 36px;
+      background: var(--orange);
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .nav-logo span {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--white);
+    }
+
+    .nav-logo span em { color: var(--orange); font-style: normal; }
+
+    nav a.login-btn {
+      font-family: 'Barlow', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--black);
+      background: var(--orange);
+      padding: 10px 28px;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    nav a.login-btn:hover { background: var(--orange-hot); transform: scale(1.04); }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex; align-items: center;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute; inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1800&q=80&auto=format&fit=crop');
+      background-size: cover;
+      background-position: center 30%;
+      filter: brightness(0.28) saturate(0.6);
+      transform: scale(1.04);
+      animation: heroZoom 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes heroZoom {
+      from { transform: scale(1.04); }
+      to   { transform: scale(1.10); }
+    }
+
+    /* Diagonal orange slash */
+    .hero::after {
+      content: '';
+      position: absolute;
+      right: -80px; top: 0; bottom: 0;
+      width: 420px;
+      background: linear-gradient(135deg, transparent 50%, rgba(255,107,0,0.12) 50%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative; z-index: 2;
+      padding: 0 48px;
+      max-width: 860px;
+    }
+
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 11px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
+      color: var(--orange);
+      border: 1px solid rgba(255,107,0,0.4);
+      padding: 6px 16px;
+      margin-bottom: 28px;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+
+    .hero-tag::before {
+      content: '';
+      display: block; width: 20px; height: 2px;
+      background: var(--orange);
+    }
+
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(56px, 8vw, 110px);
+      line-height: 0.92;
+      letter-spacing: 2px;
+      color: var(--white);
+      animation: fadeUp 0.7s 0.35s ease both;
+    }
+
+    .hero h1 span { color: var(--orange); }
+
+    .hero-sub {
+      margin-top: 28px;
+      font-size: 17px;
+      font-weight: 300;
+      color: rgba(240,237,232,0.7);
+      max-width: 520px;
+      line-height: 1.7;
+      animation: fadeUp 0.7s 0.5s ease both;
+    }
+
+    .hero-actions {
+      margin-top: 44px;
+      display: flex; gap: 16px; flex-wrap: wrap;
+      animation: fadeUp 0.7s 0.65s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--orange);
+      color: var(--black);
+      font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+      text-decoration: none;
+      padding: 16px 36px;
+      clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--orange-hot);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(255,107,0,0.4);
+    }
+
+    .btn-primary svg { transition: transform 0.2s; }
+    .btn-primary:hover svg { transform: translateX(4px); }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 10px;
+      border: 1px solid rgba(255,255,255,0.25);
+      color: var(--white);
+      font-weight: 600; font-size: 14px; letter-spacing: 1px;
+      text-decoration: none;
+      padding: 16px 36px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .btn-secondary:hover { border-color: var(--orange); background: rgba(255,107,0,0.08); }
+
+    /* Hero stat strip */
+    .hero-stats {
+      position: absolute;
+      bottom: 0; left: 0; right: 0; z-index: 2;
+      display: flex;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      animation: fadeUp 0.7s 0.8s ease both;
+    }
+
+    .stat-item {
+      flex: 1;
+      padding: 24px 40px;
+      border-right: 1px solid rgba(255,255,255,0.07);
+      transition: background 0.2s;
+    }
+
+    .stat-item:last-child { border-right: none; }
+    .stat-item:hover { background: rgba(255,107,0,0.05); }
+
+    .stat-item .num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      color: var(--orange);
+      line-height: 1;
+    }
+
+    .stat-item .label {
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--ash);
+      margin-top: 4px;
+    }
+
+    /* ─── SCROLL MARQUEE ─── */
+    .marquee-wrap {
+      background: var(--orange);
+      overflow: hidden;
+      padding: 14px 0;
+    }
+
+    .marquee-track {
+      display: flex; gap: 0;
+      animation: marquee 22s linear infinite;
+      white-space: nowrap;
+    }
+
+    .marquee-track span {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900; font-size: 13px;
+      letter-spacing: 3px; text-transform: uppercase;
+      color: var(--black);
+      padding: 0 40px;
+    }
+
+    .marquee-track span::after {
+      content: '◆';
+      margin-left: 40px;
+      color: rgba(0,0,0,0.3);
+    }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ─── SECTION COMMON ─── */
+    section { position: relative; z-index: 1; }
+
+    .section-label {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 11px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 16px;
+    }
+
+    .section-label::before {
+      content: '';
+      display: block; width: 28px; height: 2px;
+      background: var(--orange);
+    }
+
+    /* ─── ABOUT / IMAGE SPLIT ─── */
+    .about {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 540px;
+    }
+
+    .about-img {
+      position: relative; overflow: hidden;
+    }
+
+    .about-img img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: brightness(0.75) saturate(0.7);
+      transition: transform 0.8s ease, filter 0.4s;
+    }
+
+    .about-img:hover img { transform: scale(1.04); filter: brightness(0.85) saturate(1); }
+
+    .about-img::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to right, transparent 60%, var(--dark) 100%);
+    }
+
+    .about-text {
+      background: var(--dark);
+      padding: 80px 64px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+
+    .about-text h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(40px, 4vw, 62px);
+      line-height: 1;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+
+    .about-text h2 span { color: var(--orange); }
+
+    .about-text p {
+      font-size: 16px; font-weight: 300; line-height: 1.8;
+      color: rgba(240,237,232,0.65);
+      margin-bottom: 16px;
+    }
+
+    /* ─── FEATURES ─── */
+    .features-section {
+      background: var(--charcoal);
+      padding: 100px 48px;
+    }
+
+    .features-header {
+      max-width: 600px;
+      margin-bottom: 64px;
+    }
+
+    .features-header h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(42px, 5vw, 72px);
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
+    .features-header h2 span { color: var(--orange); }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2px;
+    }
+
+    .feature-card {
+      background: var(--steel);
+      padding: 44px 36px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s, transform 0.3s;
+      cursor: default;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute; bottom: 0; left: 0;
+      width: 0; height: 3px;
+      background: var(--orange);
+      transition: width 0.4s ease;
+    }
+
+    .feature-card:hover { background: #2f3239; transform: translateY(-4px); }
+    .feature-card:hover::before { width: 100%; }
+
+    .feature-icon {
+      width: 56px; height: 56px;
+      border: 1px solid rgba(255,107,0,0.3);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 28px;
+      font-size: 24px;
+      transition: border-color 0.3s, background 0.3s;
+    }
+
+    .feature-card:hover .feature-icon {
+      border-color: var(--orange);
+      background: rgba(255,107,0,0.1);
+    }
+
+    .feature-card h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      color: var(--white);
+    }
+
+    .feature-card p {
+      font-size: 14px; font-weight: 300; line-height: 1.7;
+      color: var(--ash);
+    }
+
+    .feature-num {
+      position: absolute; top: 20px; right: 24px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 64px;
+      color: rgba(255,255,255,0.03);
+      line-height: 1;
+      user-select: none;
+    }
+
+    /* ─── IMAGE GALLERY STRIP ─── */
+    .gallery-strip {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      height: 400px;
+      gap: 3px;
+    }
+
+    .gallery-item {
+      overflow: hidden; position: relative;
+    }
+
+    .gallery-item img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: brightness(0.6) saturate(0.5);
+      transition: transform 0.7s ease, filter 0.4s;
+    }
+
+    .gallery-item:hover img {
+      transform: scale(1.07);
+      filter: brightness(0.8) saturate(1);
+    }
+
+    .gallery-item .overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+      display: flex; align-items: flex-end; padding: 24px;
+    }
+
+    .gallery-item .overlay span {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* ─── CTA ─── */
+    .cta {
+      background: var(--dark);
+      padding: 120px 48px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+
+    .cta::before {
+      content: '';
+      position: absolute; top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(255,107,0,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(52px, 7vw, 96px);
+      letter-spacing: 2px;
+      line-height: 1;
+      margin-bottom: 24px;
+    }
+
+    .cta h2 span { color: var(--orange); }
+
+    .cta p {
+      font-size: 17px; font-weight: 300;
+      color: rgba(255,255,255,0.5);
+      max-width: 480px; margin: 0 auto 48px;
+      line-height: 1.7;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--black);
+      border-top: 1px solid rgba(255,107,0,0.12);
+      padding: 40px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 20px;
+    }
+
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px; letter-spacing: 2px;
+      color: var(--ash);
+    }
+
+    .footer-logo em { color: var(--orange); font-style: normal; }
+
+    footer p {
+      font-size: 12px; letter-spacing: 1px;
+      color: rgba(255,255,255,0.2);
+    }
+
+    footer .footer-links {
+      display: flex; gap: 28px;
+    }
+
+    footer .footer-links a {
+      font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--ash); text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer .footer-links a:hover { color: var(--orange); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0; transform: translateY(40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      nav { padding: 0 24px; }
+      .hero-content { padding: 0 24px; }
+      .hero-stats { display: none; }
+      .about { grid-template-columns: 1fr; }
+      .about-img { height: 280px; }
+      .about-text { padding: 48px 32px; }
+      .features-section { padding: 72px 24px; }
+      .gallery-strip { grid-template-columns: 1fr; height: auto; }
+      .gallery-item { height: 220px; }
+      .cta { padding: 80px 24px; }
+      footer { padding: 32px 24px; flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav>
+  <div class="nav-logo">
+    <div class="icon"></div>
+    <span>MUHLE <em>CONSTRUCTION</em></span>
+  </div>
+  <a href="/login" class="login-btn">
+    Login &rarr;
+  </a>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+
+  <div class="hero-content">
+    <div class="hero-tag">Project Management Platform</div>
+
+    <h1>
+      BUILD<br>
+      <span>SMARTER.</span><br>
+      DELIVER FASTER.
+    </h1>
+
+    <p class="hero-sub">
+      A unified platform to manage projects, teams, equipment, and operations—
+      from first inquiry to final handover.
+    </p>
+
+    <div class="hero-actions">
+      <a href="/login" class="btn-primary">
+        Get Started
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a href="#features" class="btn-secondary">Explore Features</a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="num">500+</div>
+      <div class="label">Projects Managed</div>
+    </div>
+    <div class="stat-item">
+      <div class="num">98%</div>
+      <div class="label">On-Time Delivery</div>
+    </div>
+    <div class="stat-item">
+      <div class="num">40%</div>
+      <div class="label">Cost Reduction</div>
+    </div>
+    <div class="stat-item">
+      <div class="num">24/7</div>
+      <div class="label">Live Monitoring</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MARQUEE ── -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span>Project Tracking</span>
+    <span>BOQ Generation</span>
+    <span>Team Dispatch</span>
+    <span>Equipment Management</span>
+    <span>Progress Reports</span>
+    <span>Client Portal</span>
+    <span>Cost Control</span>
+    <span>Site Safety</span>
+    <span>Project Tracking</span>
+    <span>BOQ Generation</span>
+    <span>Team Dispatch</span>
+    <span>Equipment Management</span>
+    <span>Progress Reports</span>
+    <span>Client Portal</span>
+    <span>Cost Control</span>
+    <span>Site Safety</span>
+  </div>
+</div>
+
+<!-- ── ABOUT SPLIT ── -->
+<section class="about reveal">
+  <div class="about-img">
+    <img
+      src="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=900&q=80&auto=format&fit=crop"
+      alt="Construction blueprint planning"
+      loading="lazy"
+    />
+  </div>
+  <div class="about-text">
+    <div class="section-label">About the Platform</div>
+    <h2>One Platform.<br><span>Every Phase.</span></h2>
+    <p>
+      From the first client inquiry to final project handover, MUHLE CONSTRUCTION gives your team a single source of truth—eliminating silos and keeping every stakeholder aligned.
+    </p>
+    <p>
+      Built for construction professionals who demand precision, speed, and accountability on every build.
+    </p>
+    <a href="/login" class="btn-primary" style="margin-top: 32px; display:inline-flex; width:fit-content;">
+      Start Today
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features-section" id="features">
+  <div class="features-header reveal">
+    <div class="section-label">Core Modules</div>
+    <h2>Everything<br><span>You Need.</span></h2>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="feature-num">01</div>
+      <div class="feature-icon">📋</div>
+      <h3>Project Inquiry</h3>
+      <p>Capture, qualify, and manage client project requests from a centralised dashboard.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-num">02</div>
+      <div class="feature-icon">📐</div>
+      <h3>BOQ & Costing</h3>
+      <p>Generate accurate bills of quantities and real-time cost breakdowns with automated calculations.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-num">03</div>
+      <div class="feature-icon">👷</div>
+      <h3>Team Dispatch</h3>
+      <p>Assign crews, schedule shifts, and track personnel deployment across multiple active sites.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-num">04</div>
+      <div class="feature-icon">📊</div>
+      <h3>Progress Tracking</h3>
+      <p>Monitor real-time milestones, phase completion, and project health with visual dashboards.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-num">05</div>
+      <div class="feature-icon">🏗️</div>
+      <h3>Equipment Control</h3>
+      <p>Track asset utilisation, maintenance schedules, and equipment allocation across all sites.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-num">06</div>
+      <div class="feature-icon">📁</div>
+      <h3>Document Hub</h3>
+      <p>Store, version, and share drawings, permits, and compliance documents in one secure location.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── GALLERY STRIP ── -->
+<div class="gallery-strip">
+  <div class="gallery-item">
+    <img
+      src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1000&q=80&auto=format&fit=crop"
+      alt="Construction site overview"
+      loading="lazy"
+    />
+    <div class="overlay"><span>Site Overview</span></div>
+  </div>
+  <div class="gallery-item">
+    <img
+      src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80&auto=format&fit=crop"
+      alt="Tower crane construction"
+      loading="lazy"
+    />
+    <div class="overlay"><span>Heavy Lift</span></div>
+  </div>
+  <div class="gallery-item">
+    <img
+      src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600&q=80&auto=format&fit=crop"
+      alt="Construction team planning"
+      loading="lazy"
+    />
+    <div class="overlay"><span>Team Planning</span></div>
+  </div>
+</div>
+
+<!-- ── CTA ── -->
+<section class="cta reveal">
+  <h2>READY TO<br><span>BUILD BETTER?</span></h2>
+  <p>Join hundreds of construction firms already managing their projects with precision and confidence.</p>
+  <a href="/login" class="btn-primary">
+    Access the Platform
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </a>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-logo">MUHLE <em>CONSTRUCTION</em></div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Support</a>
+    <a href="/login">Login</a>
+  </div>
+  <p>© 2026 MUHLE CONSTRUCTION — Built for Efficiency</p>
+</footer>
+
+<script>
+  // Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

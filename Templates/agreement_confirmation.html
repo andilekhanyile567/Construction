@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="confirmation-container">
+    <i class="fas fa-check-circle" style="font-size: 4rem; color: #27ae60;"></i>
+    <h2>Agreement Signed Successfully!</h2>
+    <p>Your service agreement has been signed. You can now proceed to make payments.</p>
+    <a href="{{ url_for('payments') }}" class="btn">Go to Payments</a>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="status-page">
+    <div class="status-card">
+        <i class="fas fa-circle-check"></i>
+        <h2>Agreement Already Signed</h2>
+        <p>
+            {{ agreement.contract_title or 'This service agreement' }} was signed
+            {% if agreement.signed_at %}on {{ agreement.signed_at[:10] }}{% endif %}.
+            You can continue with milestone payments from your dashboard.
+        </p>
+        <div class="meta">
+            <div><strong>Client:</strong> {{ agreement.client_name }}</div>
+            <div><strong>Budget:</strong> R{{ "{:,.2f}".format(agreement.budget|float) }}</div>
+        </div>
+        <div class="actions">
+            <a href="{{ url_for('dashboard') }}" class="btn">Back to Dashboard</a>
+            <a href="{{ url_for('payments') }}" class="btn-secondary">Go to Payments</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .status-page { min-height: 60vh; display: grid; place-items: center; }
+    .status-card { max-width: 580px; background: white; border-radius: 18px; padding: 2rem; text-align: center; box-shadow: 0 6px 18px rgba(0,0,0,0.07); }
+    .status-card i { font-size: 3rem; color: #27ae60; margin-bottom: 1rem; }
+    .status-card p { color: #555; line-height: 1.5; }
+    .meta { background: #f8f9fa; border-radius: 12px; padding: 1rem; margin-top: 1rem; display: grid; gap: 0.35rem; }
+    .actions { display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem; }
+    .btn, .btn-secondary { border-radius: 30px; padding: 10px 18px; text-decoration: none; font-weight: 700; }
+    .btn { background: #e67e22; color: white; }
+    .btn-secondary { background: #ecf0f1; color: #2c3e50; }
+</style>
+{% endblock %}

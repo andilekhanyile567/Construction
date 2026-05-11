@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="status-page">
+    <div class="status-card">
+        <i class="fas fa-file-circle-clock"></i>
+        <h2>No Pending Agreement</h2>
+        <p>There is no service agreement waiting for your signature right now. Approved agreements will appear here as soon as a project manager sends one to your portal.</p>
+        <div class="actions">
+            <a href="{{ url_for('dashboard') }}" class="btn">Back to Dashboard</a>
+            <a href="{{ url_for('project_inquiry') }}" class="btn-secondary">Submit New Inquiry</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .status-page { min-height: 60vh; display: grid; place-items: center; }
+    .status-card { max-width: 560px; background: white; border-radius: 18px; padding: 2rem; text-align: center; box-shadow: 0 6px 18px rgba(0,0,0,0.07); }
+    .status-card i { font-size: 3rem; color: #e67e22; margin-bottom: 1rem; }
+    .status-card p { color: #555; line-height: 1.5; }
+    .actions { display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem; }
+    .btn, .btn-secondary { border-radius: 30px; padding: 10px 18px; text-decoration: none; font-weight: 700; }
+    .btn { background: #e67e22; color: white; }
+    .btn-secondary { background: #ecf0f1; color: #2c3e50; }
+</style>
+{% endblock %}

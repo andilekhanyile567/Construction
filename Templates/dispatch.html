@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dispatch-wrapper">
+    <div class="dispatch-header">
+        <h2><i class="fas fa-truck-moving"></i> Site Establishment & Dispatch</h2>
+        <p class="dispatch-subtitle">Schedule transport, set up site office, deploy crews, and confirm completion</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="dispatch-form" id="dispatchForm">
+        <!-- Step progress indicator -->
+        <div class="step-progress">
+            <div class="step-progress-item active" data-step="1">1. Machinery Transport</div>
+            <div class="step-progress-item" data-step="2">2. Site Office & Power</div>
+            <div class="step-progress-item" data-step="3">3. Crew Deployment</div>
+            <div class="step-progress-item" data-step="4">4. Confirm Completion</div>
+        </div>
+
+        <!-- STEP 1: Schedule transport for internal heavy machinery -->
+        <div class="form-card" id="step1">
+            <div class="card-header">
+                <span class="step-badge">Step 1</span>
+                <h3>Schedule transport for internal heavy machinery</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label><i class="fas fa-tractor"></i> Machinery to transport</label>
+                    <textarea name="machinery_list" rows="3" placeholder="List heavy equipment (excavator, bulldozer, crane, dump trucks, etc.)"></textarea>
+                </div>
+                <div class="form-row two-cols">
+                    <div class="form-group">
+                        <label>Transport date</label>
+                        <input type="date" name="transport_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Estimated arrival time</label>
+                        <input type="time" name="transport_arrival_time">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Transport company / internal logistics</label>
+                    <input type="text" name="transport_provider" placeholder="e.g., Fleet Management Unit">
+                </div>
+                <div class="form-group">
+                    <label>Vehicle / trailer registration</label>
+                    <input type="text" name="vehicle_reg" placeholder="Optional">
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-next" data-next="2">Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 2: Setup temporary site office and power connections -->
+        <div class="form-card" id="step2" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 2</span>
+                <h3>Setup temporary site office & power connections</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Site office type</label>
+                    <select name="office_type">
+                        <option value="container_office">Container office</option>
+                        <option value="portacabin">Portacabin</option>
+                        <option value="mobile_trailer">Mobile trailer</option>
+                        <option value="rented_space">Rented local space</option>
+                    </select>
+                </div>
+                <div class="form-row two-cols">
+                    <div class="form-group">
+                        <label>Power source</label>
+                        <select name="power_source">
+                            <option value="grid">Grid connection</option>
+                            <option value="generator">Generator</option>
+                            <option value="solar">Solar + battery</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Power requirement (kVA)</label>
+                        <input type="number" name="power_kva" step="5" placeholder="e.g., 50">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Setup completion date</label>
+                    <input type="date" name="office_setup_date">
+                </div>
+                <div class="form-group">
+                    <label>Upload site office photo / proof</label>
+                    <input type="file" name="office_photo" accept="image/*">
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="1">← Back</button>
+                <button type="button" class="btn-next" data-next="3">Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 3: Deploy internal crews to the location -->
+        <div class="form-card" id="step3" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 3</span>
+                <h3>Deploy internal crews to the location</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Crew names / IDs</label>
+                    <textarea name="crew_name" rows="3" placeholder="List crew members or team leads (e.g., Site Supervisor: John, Electricians: Team A)"></textarea>
+                </div>
+                <div class="form-row two-cols">
+                    <div class="form-group">
+                        <label>Deployment date</label>
+                        <input type="date" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Shift schedule</label>
+                        <select name="shift">
+                            <option value="day">Day shift (7am-4pm)</option>
+                            <option value="night">Night shift (9pm-6am)</option>
+                            <option value="rotating">Rotating</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Accommodation provided?</label>
+                    <div class="toggle-group">
+                        <label><input type="radio" name="accommodation" value="yes"> Yes</label>
+                        <label><input type="radio" name="accommodation" value="no" checked> No</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Transport for crew (if any)</label>
+                    <input type="text" name="crew_transport" placeholder="e.g., Company bus, private vehicles">
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="2">← Back</button>
+                <button type="button" class="btn-next" data-next="4">Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 4: Confirm site establishment completion -->
+        <div class="form-card" id="step4" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 4</span>
+                <h3>Confirm site establishment completion in the system</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Site readiness status</label>
+                    <select name="site_status">
+                        <option value="ready">Fully ready – all steps completed</option>
+                        <option value="partial">Partially ready – pending minor items</option>
+                        <option value="not_ready">Not ready – major issues</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Completion checklist</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="check_machinery" value="yes"> Machinery delivered & positioned</label>
+                        <label><input type="checkbox" name="check_office" value="yes"> Site office & power functional</label>
+                        <label><input type="checkbox" name="check_crews" value="yes"> Crews deployed and inducted</label>
+                        <label><input type="checkbox" name="check_safety" value="yes"> Safety equipment on site</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirmed by (name & role)</label>
+                    <input type="text" name="confirmed_by" placeholder="e.g., Site Manager">
+                </div>
+                <div class="form-group">
+                    <label>Confirmation date & time</label>
+                    <input type="datetime-local" name="confirmation_datetime">
+                </div>
+                <div class="form-group">
+                    <label>Additional remarks</label>
+                    <textarea name="completion_remarks" rows="2" placeholder="Any issues, deviations, or notes"></textarea>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="3">← Back</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-check-circle"></i> Confirm Site Establishment</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Multi-step navigation
+    const steps = [1, 2, 3, 4];
+    let currentStep = 1;
+
+    function showStep(step) {
+        steps.forEach(s => {
+            const card = document.getElementById(`step${s}`);
+            if (card) card.style.display = s === step ? 'block' : 'none';
+        });
+        document.querySelectorAll('.step-progress-item').forEach((item, idx) => {
+            const stepNum = idx + 1;
+            if (stepNum <= step) item.classList.add('active');
+            else item.classList.remove('active');
+        });
+        currentStep = step;
+    }
+
+    document.querySelectorAll('.btn-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const next = parseInt(btn.getAttribute('data-next'));
+            if (next) showStep(next);
+        });
+    });
+    document.querySelectorAll('.btn-prev').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const prev = parseInt(btn.getAttribute('data-prev'));
+            if (prev) showStep(prev);
+        });
+    });
+</script>
+
+<style>
+    .dispatch-wrapper {
+        max-width: 950px;
+        margin: 2rem auto;
+        background: #fff;
+        border-radius: 32px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        padding: 2rem;
+    }
+    .dispatch-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .dispatch-header h2 {
+        font-size: 1.8rem;
+        color: #e67e22;
+        margin-bottom: 0.3rem;
+    }
+    .dispatch-subtitle {
+        color: #777;
+        border-left: 3px solid #e67e22;
+        padding-left: 1rem;
+        display: inline-block;
+    }
+    .step-progress {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 0.8rem;
+    }
+    .step-progress-item {
+        flex: 1;
+        text-align: center;
+        font-weight: 600;
+        color: #aaa;
+        position: relative;
+        font-size: 0.9rem;
+    }
+    .step-progress-item.active {
+        color: #e67e22;
+    }
+    .step-progress-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #e67e22;
+        border-radius: 3px;
+    }
+    .form-card {
+        background: #fefcf8;
+        border-radius: 24px;
+        padding: 1.5rem;
+        transition: 0.2s;
+    }
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #f0e3d0;
+        padding-bottom: 0.8rem;
+    }
+    .step-badge {
+        background: #e67e22;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    .card-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+    }
+    .form-row {
+        margin-bottom: 1rem;
+    }
+    .two-cols {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .two-cols .form-group {
+        flex: 1;
+    }
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    .form-group label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.4rem;
+        color: #2c2c2c;
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        font-family: inherit;
+        transition: 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: #e67e22;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+    }
+    .toggle-group, .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .toggle-group label, .checkbox-group label {
+        font-weight: normal;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1.8rem;
+        gap: 1rem;
+    }
+    .btn-next, .btn-prev, .btn-submit {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 40px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-next {
+        background: #e67e22;
+        color: white;
+    }
+    .btn-next:hover {
+        background: #f39c12;
+        transform: translateX(2px);
+    }
+    .btn-prev {
+        background: #f0f0f0;
+        color: #555;
+    }
+    .btn-prev:hover {
+        background: #e0e0e0;
+    }
+    .btn-submit {
+        background: #27ae60;
+        color: white;
+        margin-left: auto;
+    }
+    .btn-submit:hover {
+        background: #2ecc71;
+    }
+    @media (max-width: 700px) {
+        .dispatch-wrapper { padding: 1rem; }
+        .step-progress-item { font-size: 0.7rem; }
+        .two-cols { flex-direction: column; gap: 0; }
+        .card-footer { flex-direction: column; }
+        .btn-submit { margin-left: 0; }
+    }
+</style>
+{% endblock %}

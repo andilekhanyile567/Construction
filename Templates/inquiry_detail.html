@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="inquiry-detail-container">
+    <div class="detail-header">
+        <h2><i class="fas fa-clipboard-list"></i> Project Inquiry Details</h2>
+        <a href="{{ url_for('project_inquiries_list') }}" class="btn-back">← Back to List</a>
+    </div>
+
+    <div class="detail-card">
+        <div class="detail-section">
+            <h3>Client Information</h3>
+            <div class="detail-row"><strong>Client Name:</strong> {{ inquiry.client_name }}</div>
+            <div class="detail-row"><strong>Client Email:</strong> {{ inquiry.client_email }}</div>
+            {% if inquiry.client_phone %}
+            <div class="detail-row"><strong>Client Phone:</strong> {{ inquiry.client_phone }}</div>
+            {% endif %}
+        </div>
+
+        <div class="detail-section">
+            <h3>Project Details</h3>
+            <div class="detail-row"><strong>Project Scope:</strong> {{ inquiry.project_scope }}</div>
+            <div class="detail-row"><strong>Project Type:</strong> {{ inquiry.project_type|default('—', true)|replace('_', ' ')|title }}</div>
+            <div class="detail-row"><strong>Location:</strong> {{ inquiry.location }}</div>
+            <div class="detail-row"><strong>Budget (ZAR):</strong> R{{ "{:,.2f}".format(inquiry.budget|float) }}</div>
+            <div class="detail-row"><strong>Deadline:</strong> {{ inquiry.deadline }}</div>
+            <div class="detail-row"><strong>Status:</strong> <span class="status-badge {{ inquiry.status }}">{{ inquiry.status|replace('_', ' ')|title }}</span></div>
+        </div>
+
+        <div class="detail-section">
+            <h3>Additional Information</h3>
+            <div class="detail-row"><strong>Project Details:</strong> {{ inquiry.project_details or '—' }}</div>
+            <div class="detail-row"><strong>Floors:</strong> {{ inquiry.floors|default('—', true) }}</div>
+            <div class="detail-row"><strong>Area (m²):</strong> {{ inquiry.area_sqm|default('—', true) }}</div>
+            <div class="detail-row"><strong>Soil Type:</strong> {{ inquiry.soil_type|default('—', true) }}</div>
+            <div class="detail-row"><strong>AI Area (m²):</strong> {{ inquiry.ai_estimated_area|default('—', true) }}</div>
+            <div class="detail-row"><strong>Payment Preference:</strong> {{ inquiry.payment_milestone|default('—', true) }}</div>
+            <div class="detail-row"><strong>Environmental Assessment:</strong> {{ 'Yes' if inquiry.env_impact else 'No' }}</div>
+            <div class="detail-row"><strong>Submitted on:</strong> {{ inquiry.timestamp[:10] }} at {{ inquiry.timestamp[11:16] }}</div>
+        </div>
+
+        {% if inquiry.sketches or inquiry.site_photos %}
+        <div class="detail-section">
+            <h3>Attachments</h3>
+            {% if inquiry.sketches %}
+            <div class="detail-row"><strong>Sketches:</strong> 
+                {% for file in inquiry.sketches %}
+                    <a href="{{ url_for('uploaded_file', filename=file) }}" target="_blank">{{ file }}</a>{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if inquiry.site_photos %}
+            <div class="detail-row"><strong>Site Photos:</strong> 
+                {% for file in inquiry.site_photos %}
+                    <a href="{{ url_for('uploaded_file', filename=file) }}" target="_blank">{{ file }}</a>{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="detail-actions">
+            <a href="{{ url_for('edit_inquiry', inquiry_id=inquiry.id) }}" class="btn btn-edit">
+                <i class="fas fa-pen"></i> Edit Inquiry
+            </a>
+            {% if inquiry.status == 'pending_review' %}
+                <a href="{{ url_for('approve_inquiry', inquiry_id=inquiry.id) }}" class="btn btn-approve" onclick="return confirm('Approve this inquiry? The client will be notified by email.')">
+                    <i class="fas fa-check-circle"></i> Approve Inquiry
+                </a>
+                <a href="{{ url_for('reject_inquiry', inquiry_id=inquiry.id) }}" class="btn btn-reject" onclick="return confirm('Reject this inquiry? The client will be notified by email.')">
+                    <i class="fas fa-times-circle"></i> Reject Inquiry
+                </a>
+            {% elif inquiry.status == 'approved' %}
+                <a href="{{ url_for('agreement', prefill_inquiry=inquiry.id) }}" class="btn btn-agreement">
+                    <i class="fas fa-file-signature"></i> Create Service Agreement
+                </a>
+                {% if inquiry.client_phone %}
+                <button class="btn btn-sms" onclick="showSmsModal('{{ inquiry.id }}', '{{ inquiry.client_phone }}')">
+                    <i class="fas fa-sms"></i> Send SMS
+                </button>
+                {% endif %}
+            {% endif %}
+            <a href="{{ url_for('project_inquiries_list') }}" class="btn btn-secondary">Back to Inquiries</a>
+        </div>
+    </div>
+</div>
+
+<!-- SMS Modal (hidden by default) -->
+<div id="smsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeSmsModal()">&times;</span>
+        <h3>Send SMS to Client</h3>
+        <form id="smsForm" method="POST" action="">
+            <div class="form-group">
+                <label>Phone Number:</label>
+                <input type="text" id="smsPhone" name="phone_number" readonly>
+            </div>
+            <div class="form-group">
+                <label>Message:</label>
+                <textarea name="message" rows="3" required placeholder="Enter your message..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-sms">Send SMS</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .inquiry-detail-container { max-width: 900px; margin: 2rem auto; }
+    .detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .btn-back { background: #7f8c8d; color: white; padding: 8px 16px; border-radius: 40px; text-decoration: none; }
+    .detail-card { background: white; border-radius: 24px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .detail-section { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; }
+    .detail-section h3 { margin-bottom: 1rem; color: #e67e22; }
+    .detail-row { margin-bottom: 0.5rem; font-size: 0.95rem; }
+    .detail-row strong { width: 150px; display: inline-block; }
+    .status-badge { background: #f39c12; padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; color: white; }
+    .status-badge.approved { background: #27ae60; }
+    .status-badge.rejected { background: #e74c3c; }
+    .detail-actions { margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn { padding: 8px 20px; border-radius: 40px; text-decoration: none; display: inline-block; border: none; cursor: pointer; font-size: 0.9rem; }
+    .btn-approve { background: #27ae60; color: white; }
+    .btn-edit { background: #34495e; color: white; }
+    .btn-approve:hover { background: #2ecc71; }
+    .btn-reject { background: #e74c3c; color: white; }
+    .btn-reject:hover { background: #c0392b; }
+    .btn-agreement { background: #e67e22; color: white; }
+    .btn-agreement:hover { background: #f39c12; }
+    .btn-sms { background: #3498db; color: white; }
+    .btn-sms:hover { background: #2980b9; }
+    .btn-secondary { background: #95a5a6; color: white; }
+    .modal { position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; }
+    .modal-content { background: white; padding: 2rem; border-radius: 24px; max-width: 500px; width: 90%; }
+    .close { float: right; font-size: 28px; cursor: pointer; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.3rem; font-weight: bold; }
+    .form-group input, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; }
+    @media (max-width: 700px) {
+        .detail-row strong { width: 100%; margin-bottom: 4px; }
+        .detail-actions { flex-direction: column; align-items: center; }
+        .btn { width: 100%; text-align: center; }
+    }
+</style>
+
+<script>
+    function showSmsModal(inquiryId, phoneNumber) {
+        const modal = document.getElementById('smsModal');
+        const form = document.getElementById('smsForm');
+        form.action = "/send_sms/" + inquiryId;
+        document.getElementById('smsPhone').value = phoneNumber;
+        modal.style.display = 'flex';
+    }
+    function closeSmsModal() {
+        document.getElementById('smsModal').style.display = 'none';
+    }
+    window.onclick = function(event) {
+        const modal = document.getElementById('smsModal');
+        if (event.target == modal) closeSmsModal();
+    }
+</script>
+{% endblock %}

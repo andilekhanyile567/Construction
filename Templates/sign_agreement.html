@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="agreement-sign-container">
+    <div class="sign-header">
+        <h2><i class="fas fa-file-signature"></i> Sign Service Agreement</h2>
+        <p>Please review the contract below and sign electronically.</p>
+    </div>
+
+    <div class="agreement-card">
+        <!-- Contract identification -->
+        {% if agreement.contract_title %}
+        <h3>{{ agreement.contract_title }}</h3>
+        <div class="contract-meta">
+            <span><strong>Contract No.:</strong> {{ agreement.contract_number or 'N/A' }}</span>
+            <span><strong>Date:</strong> {{ agreement.contract_date or agreement.created_at[:10] }}</span>
+        </div>
+        {% else %}
+        <h3>{{ agreement.project_scope[:100] }}{% if agreement.project_scope|length > 100 %}...{% endif %}</h3>
+        {% endif %}
+
+        <div class="agreement-details">
+            <div><strong>Client:</strong> {{ agreement.client_name }}</div>
+            <div><strong>Budget:</strong> ZAR {{ "{:,.2f}".format(agreement.budget|float) }}</div>
+            <div><strong>Deadline:</strong> {{ agreement.deadline }}</div>
+        </div>
+
+        <!-- Milestones & Payment Terms (if provided by PM) -->
+        {% if agreement.milestones or agreement.payment_terms %}
+        <div class="extra-details">
+            {% if agreement.milestones %}
+            <div><strong>Milestones:</strong> {{ agreement.milestones }}</div>
+            {% endif %}
+            {% if agreement.payment_terms %}
+            <div><strong>Payment Terms:</strong> {{ agreement.payment_terms }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <hr>
+        <h4>📜 Terms & Conditions</h4>
+        <div class="terms-box">
+            {% if agreement.legal_clauses %}
+                {{ agreement.legal_clauses|safe }}
+            {% else %}
+                <p>1. The Contractor agrees to execute the works as defined in the project scope.</p>
+                <p>2. Payment schedule: 30% mobilization, 40% on milestone, 30% on handover.</p>
+                <p>3. Any variations must be approved in writing.</p>
+                <p>4. Disputes shall be resolved through arbitration.</p>
+            {% endif %}
+            <p class="mt-2"><strong>By signing below, you agree to all terms.</strong></p>
+        </div>
+    </div>
+
+    <form method="POST" id="signForm">
+        <div class="signature-section">
+            <h4><i class="fas fa-pen-fancy"></i> Electronic Signature</h4>
+            <div class="signature-pad-wrapper">
+                <canvas id="signatureCanvas" width="500" height="180" style="border:2px solid #e67e22; border-radius:12px; background:#fff;"></canvas>
+                <div class="sig-buttons">
+                    <button type="button" id="clearSignatureBtn" class="btn-clear">Clear</button>
+                    <button type="button" id="undoSignatureBtn" class="btn-undo">Undo</button>
+                </div>
+            </div>
+            <div class="typed-signature">
+                <label>Or type your full legal name:</label>
+                <input type="text" name="signature" id="typedName" placeholder="e.g., John M. Doe">
+                <small>Typing your name is legally binding as an electronic signature.</small>
+            </div>
+        </div>
+
+        <div class="accept-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="accept_terms" id="acceptTerms" required>
+                <span>I have read and accept the Terms & Conditions</span>
+            </label>
+        </div>
+
+        <button type="submit" class="btn-sign">✓ Sign & Submit</button>
+    </form>
+</div>
+
+<style>
+    .agreement-sign-container { max-width: 800px; margin: 2rem auto; }
+    .agreement-card { background: white; border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .contract-meta { display: flex; gap: 1.5rem; margin-top: 0.5rem; font-size: 0.85rem; color: #666; }
+    .agreement-details { display: flex; flex-wrap: wrap; gap: 1.5rem; background: #fef9f0; padding: 1rem; border-radius: 16px; margin: 1rem 0; }
+    .extra-details { background: #f0f7ff; padding: 0.75rem; border-radius: 12px; margin: 1rem 0; font-size: 0.9rem; }
+    .terms-box { background: #f8f9fc; border-left: 4px solid #e67e22; padding: 1rem; max-height: 250px; overflow-y: auto; font-size: 0.9rem; line-height: 1.4; }
+    .signature-section { background: #fef9f0; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    #signatureCanvas { width: 100%; height: auto; background: white; cursor: crosshair; border: 2px solid #e67e22; border-radius: 12px; }
+    .sig-buttons { margin-top: 10px; display: flex; gap: 10px; justify-content: center; }
+    .btn-clear, .btn-undo { background: #2c3e4f; color: white; border: none; padding: 6px 16px; border-radius: 30px; cursor: pointer; transition: 0.2s; }
+    .btn-clear:hover, .btn-undo:hover { background: #e67e22; }
+    .typed-signature { margin-top: 1rem; }
+    .typed-signature input { width: 100%; padding: 10px; border-radius: 40px; border: 1px solid #ccc; }
+    .typed-signature small { display: block; color: #888; font-size: 0.7rem; margin-top: 4px; }
+    .accept-group { margin: 1.5rem 0; }
+    .checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 500; }
+    .btn-sign { background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 40px; width: 100%; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-sign:hover { background: #2ecc71; transform: translateY(-2px); }
+    .mt-2 { margin-top: 0.5rem; }
+    @media (max-width: 640px) {
+        .agreement-sign-container { margin: 1rem; }
+        .contract-meta { flex-direction: column; gap: 0.25rem; }
+    }
+</style>
+
+<script>
+    (function() {
+        const canvas = document.getElementById('signatureCanvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        let lastX = 0, lastY = 0;
+        let history = [];
+
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#1e1e1e';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            saveState();
+        }
+
+        function saveState() {
+            history.push(canvas.toDataURL());
+            if (history.length > 20) history.shift();
+        }
+
+        function undo() {
+            if (history.length > 1) {
+                history.pop();
+                const prev = history[history.length-1];
+                const img = new Image();
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = prev;
+            } else {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            saveState();
+        }
+
+        function getCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            let x = (clientX - rect.left) * scaleX;
+            let y = (clientY - rect.top) * scaleY;
+            x = Math.min(Math.max(0, x), canvas.width);
+            y = Math.min(Math.max(0, y), canvas.height);
+            return { x, y };
+        }
+
+        function startDrawing(e) {
+            drawing = true;
+            const { x, y } = getCoordinates(e);
+            lastX = x;
+            lastY = y;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            e.preventDefault();
+        }
+
+        function draw(e) {
+            if (!drawing) return;
+            const { x, y } = getCoordinates(e);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            lastX = x;
+            lastY = y;
+            e.preventDefault();
+        }
+
+        function stopDrawing(e) {
+            if (drawing) {
+                drawing = false;
+                saveState();
+            }
+            e.preventDefault();
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+
+        document.getElementById('clearSignatureBtn').addEventListener('click', clearCanvas);
+        document.getElementById('undoSignatureBtn').addEventListener('click', undo);
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const form = document.getElementById('signForm');
+        form.addEventListener('submit', function(e) {
+            const accept = document.getElementById('acceptTerms');
+            if (!accept.checked) {
+                e.preventDefault();
+                alert('Please accept the Terms & Conditions to sign.');
+                return false;
+            }
+            const typedName = document.getElementById('typedName').value.trim();
+            const canvasBlank = () => {
+                const blankCanvas = document.createElement('canvas');
+                blankCanvas.width = canvas.width;
+                blankCanvas.height = canvas.height;
+                const blankCtx = blankCanvas.getContext('2d');
+                blankCtx.fillStyle = 'white';
+                blankCtx.fillRect(0, 0, blankCanvas.width, blankCanvas.height);
+                return canvas.toDataURL() === blankCanvas.toDataURL();
+            };
+            if (canvasBlank() && typedName === '') {
+                e.preventDefault();
+                alert('Please either draw your signature in the box above OR type your full legal name.');
+                return false;
+            }
+            if (!canvasBlank()) {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'signature_image';
+                hidden.value = canvas.toDataURL('image/png');
+                form.appendChild(hidden);
+            }
+            return true;
+        });
+    })();
+</script>
+{% endblock %}

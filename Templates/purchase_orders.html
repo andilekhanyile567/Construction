@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="po-wrapper">
+    <div class="po-header">
+        <h2><i class="fas fa-file-invoice"></i> Purchase Order</h2>
+        <p class="po-subtitle">Create, authorize, and track procurement orders</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="po-form" id="poForm">
+        <!-- Step progress indicator -->
+        <div class="step-progress">
+            <div class="step-progress-item active" data-step="1">1. Materials & Supplier</div>
+            <div class="step-progress-item" data-step="2">2. BOQ & Quantities</div>
+            <div class="step-progress-item" data-step="3">3. Authorization</div>
+            <div class="step-progress-item" data-step="4">4. Delivery & Tracking</div>
+        </div>
+
+        <!-- Step 1: Materials from approved supplier list -->
+        <div class="form-card" id="step1">
+            <div class="card-header">
+                <span class="step-badge">Step 1</span>
+                <h3>Select materials from approved supplier list</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-truck"></i> Approved supplier <span class="required">*</span></label>
+                        <select name="supplier" required>
+                            <option value="">-- Choose supplier --</option>
+                            <option value="ABC Construction Supplies Ltd.">ABC Construction Supplies Ltd. ⭐ Approved</option>
+                            <option value="Steel Masters International">Steel Masters International ⭐ Approved</option>
+                            <option value="Concrete Solutions Co.">Concrete Solutions Co. ⭐ Approved</option>
+                            <option value="Elite Electrical Distributors">Elite Electrical Distributors ⭐ Approved</option>
+                            <option value="Plumbing Plus">Plumbing Plus ⭐ Approved</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-boxes"></i> Materials & quantities</label>
+                    <textarea name="materials_list" rows="4" placeholder="Example:&#10;• Portland cement – 500 bags&#10;• Steel rebar (12mm) – 8 tons&#10;• Red bricks – 10,000 units"></textarea>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-dollar-sign"></i> Unit prices (optional)</label>
+                    <input type="text" name="unit_prices" placeholder="e.g., Cement: $12/bag, Rebar: $850/ton">
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-next" data-next="2">Next →</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Generate PO based on BOQ quantities -->
+        <div class="form-card" id="step2" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 2</span>
+                <h3>Generate PO based on BOQ quantities</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-row two-cols">
+                    <div class="form-group">
+                        <label>PO reference</label>
+                        <input type="text" name="po_reference" value="PO-{{ range(1000,9999)|random }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>BOQ reference (optional)</label>
+                        <input type="text" name="boq_reference" placeholder="Link to existing BOQ">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Total quantity summary</label>
+                    <input type="text" name="total_quantity_summary" placeholder="e.g., 500 bags cement, 8 tons rebar">
+                </div>
+                <div class="form-group">
+                    <label>Estimated total amount (USD) <span class="required">*</span></label>
+                    <input type="number" name="amount" step="0.01" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label>Upload BOQ document (PDF, Excel)</label>
+                    <input type="file" name="boq_file" accept=".pdf,.xlsx,.xls">
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="1">← Back</button>
+                <button type="button" class="btn-next" data-next="3">Next →</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Digital authorization for high-value orders -->
+        <div class="form-card" id="step3" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 3</span>
+                <h3>Obtain digital authorization for high‑value orders</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Is this a high‑value order? (> $10,000)</label>
+                    <div class="toggle-group">
+                        <label class="toggle-label"><input type="radio" name="high_value" value="yes"> Yes</label>
+                        <label class="toggle-label"><input type="radio" name="high_value" value="no" checked> No</label>
+                    </div>
+                </div>
+                <div id="authFields" style="display: none;">
+                    <div class="form-group">
+                        <label>Authorizing manager name</label>
+                        <input type="text" name="auth_manager" placeholder="Full name">
+                    </div>
+                    <div class="form-group">
+                        <label>Digital approval code</label>
+                        <input type="password" name="auth_code" placeholder="Enter secure code">
+                    </div>
+                    <div class="form-group">
+                        <label>Authorization date</label>
+                        <input type="date" name="auth_date">
+                    </div>
+                    <div class="form-group">
+                        <label>Upload signed authorization (PDF)</label>
+                        <input type="file" name="auth_document" accept=".pdf">
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="2">← Back</button>
+                <button type="button" class="btn-next" data-next="4">Next →</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Send PO and track delivery -->
+        <div class="form-card" id="step4" style="display: none;">
+            <div class="card-header">
+                <span class="step-badge">Step 4</span>
+                <h3>Send PO to supplier & track delivery dates</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-row two-cols">
+                    <div class="form-group">
+                        <label>Delivery method</label>
+                        <select name="po_delivery_method">
+                            <option value="email">Email</option>
+                            <option value="portal">Supplier portal</option>
+                            <option value="fax">Fax</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Supplier email</label>
+                        <input type="email" name="supplier_email" placeholder="purchase@supplier.com">
+                    </div>
+                </div>
+                <div class="form-row two-cols">
+                    <div class="form-group">
+                        <label>Expected delivery date</label>
+                        <input type="date" name="expected_delivery" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery site / location</label>
+                        <input type="text" name="delivery_site" placeholder="Project address">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Tracking preferences</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="tracking_email" value="yes"> Email alerts</label>
+                        <label><input type="checkbox" name="tracking_sms" value="yes"> SMS updates</label>
+                        <label><input type="checkbox" name="tracking_dashboard" value="yes"> Dashboard widget</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Internal notes (procurement team)</label>
+                    <textarea name="procurement_notes" rows="2" placeholder="Any special handling or instructions"></textarea>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn-prev" data-prev="3">← Back</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Create & Send PO</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Multi-step navigation
+    const steps = [1, 2, 3, 4];
+    let currentStep = 1;
+
+    function showStep(step) {
+        steps.forEach(s => {
+            const card = document.getElementById(`step${s}`);
+            if (card) card.style.display = s === step ? 'block' : 'none';
+        });
+        // Update progress indicators
+        document.querySelectorAll('.step-progress-item').forEach((item, idx) => {
+            const stepNum = idx + 1;
+            if (stepNum <= step) item.classList.add('active');
+            else item.classList.remove('active');
+        });
+        currentStep = step;
+    }
+
+    // Next buttons
+    document.querySelectorAll('.btn-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const next = parseInt(btn.getAttribute('data-next'));
+            if (next && !isNaN(next)) showStep(next);
+        });
+    });
+    // Previous buttons
+    document.querySelectorAll('.btn-prev').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const prev = parseInt(btn.getAttribute('data-prev'));
+            if (prev && !isNaN(prev)) showStep(prev);
+        });
+    });
+
+    // Show/hide authorization fields based on high-value selection
+    const highYes = document.querySelector('input[name="high_value"][value="yes"]');
+    const highNo = document.querySelector('input[name="high_value"][value="no"]');
+    const authFields = document.getElementById('authFields');
+
+    if (highYes && highNo && authFields) {
+        highYes.addEventListener('change', () => authFields.style.display = 'block');
+        highNo.addEventListener('change', () => authFields.style.display = 'none');
+    }
+
+    // Optional: validate step 1 before moving to step 2 (supplier & materials)
+    const nextFromStep1 = document.querySelector('#step1 .btn-next');
+    if (nextFromStep1) {
+        nextFromStep1.addEventListener('click', () => {
+            const supplier = document.querySelector('select[name="supplier"]').value;
+            if (!supplier) {
+                alert('Please select an approved supplier.');
+                return;
+            }
+            showStep(2);
+        });
+    }
+</script>
+
+<style>
+    .po-wrapper {
+        max-width: 950px;
+        margin: 2rem auto;
+        background: #fff;
+        border-radius: 32px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        overflow: hidden;
+        padding: 2rem;
+    }
+    .po-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .po-header h2 {
+        font-size: 1.8rem;
+        color: #e67e22;
+        margin-bottom: 0.3rem;
+    }
+    .po-subtitle {
+        color: #777;
+        border-left: 3px solid #e67e22;
+        padding-left: 1rem;
+        display: inline-block;
+    }
+    .step-progress {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 0.8rem;
+    }
+    .step-progress-item {
+        flex: 1;
+        text-align: center;
+        font-weight: 600;
+        color: #aaa;
+        position: relative;
+        font-size: 0.9rem;
+    }
+    .step-progress-item.active {
+        color: #e67e22;
+    }
+    .step-progress-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #e67e22;
+        border-radius: 3px;
+    }
+    .form-card {
+        background: #fefcf8;
+        border-radius: 24px;
+        padding: 1.5rem;
+        transition: 0.2s;
+    }
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #f0e3d0;
+        padding-bottom: 0.8rem;
+    }
+    .step-badge {
+        background: #e67e22;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    .card-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+    }
+    .form-row {
+        margin-bottom: 1rem;
+    }
+    .two-cols {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .two-cols .form-group {
+        flex: 1;
+    }
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    .form-group label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.4rem;
+        color: #2c2c2c;
+    }
+    .required {
+        color: #e67e22;
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        font-family: inherit;
+        transition: 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: #e67e22;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+    }
+    .toggle-group {
+        display: flex;
+        gap: 1rem;
+    }
+    .toggle-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: normal;
+    }
+    .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .checkbox-group label {
+        font-weight: normal;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1.8rem;
+        gap: 1rem;
+    }
+    .btn-next, .btn-prev, .btn-submit {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 40px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-next {
+        background: #e67e22;
+        color: white;
+    }
+    .btn-next:hover {
+        background: #f39c12;
+        transform: translateX(2px);
+    }
+    .btn-prev {
+        background: #f0f0f0;
+        color: #555;
+    }
+    .btn-prev:hover {
+        background: #e0e0e0;
+    }
+    .btn-submit {
+        background: #27ae60;
+        color: white;
+        margin-left: auto;
+    }
+    .btn-submit:hover {
+        background: #2ecc71;
+    }
+    @media (max-width: 700px) {
+        .po-wrapper { padding: 1rem; }
+        .step-progress-item { font-size: 0.7rem; }
+        .two-cols { flex-direction: column; gap: 0; }
+        .card-footer { flex-direction: column; }
+        .btn-submit { margin-left: 0; }
+    }
+</style>
+{% endblock %}

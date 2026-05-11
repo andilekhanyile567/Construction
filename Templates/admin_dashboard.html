@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h2><i class="fas fa-user-shield"></i> Admin Dashboard</h2>
+    <p>Welcome, {{ current_user.username }}. You have full system oversight.</p>
+
+    <!-- Expanded Stats Cards (with fallbacks) -->
+    <div class="stats-grid">
+        <div class="stat-card"><i class="fas fa-users"></i><h3>{{ stats.total_users|default(0) }}</h3><p>Total Users</p></div>
+        <div class="stat-card"><i class="fas fa-user-tie"></i><h3>{{ stats.project_managers|default(0) }}</h3><p>Project Managers</p></div>
+        <div class="stat-card"><i class="fas fa-user-friends"></i><h3>{{ stats.clients|default(0) }}</h3><p>Clients</p></div>
+        <div class="stat-card"><i class="fas fa-hard-hat"></i><h3>{{ stats.employees|default(0) }}</h3><p>Employees</p></div>
+        <div class="stat-card"><i class="fas fa-clipboard-list"></i><h3>{{ stats.total_inquiries|default(0) }}</h3><p>Inquiries</p></div>
+        <div class="stat-card"><i class="fas fa-calculator"></i><h3>{{ stats.total_boqs|default(0) }}</h3><p>BOQs</p></div>
+        <div class="stat-card"><i class="fas fa-file-invoice"></i><h3>{{ stats.total_orders|default(0) }}</h3><p>Purchase Orders</p></div>
+        <div class="stat-card"><i class="fas fa-hand-holding-usd"></i><h3>{{ stats.total_payments|default(0) }}</h3><p>Payments Processed</p></div>
+    </div>
+
+    <!-- User Management Table (complete with all fields) -->
+    <div class="dashboard-section">
+        <h3><i class="fas fa-users-cog"></i> All Users ({{ users|length }})</h3>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Employee Type</th>
+                        <th>Employee # / PM Code</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td><span class="role-badge {{ user.role }}">{{ user.role|replace('_', ' ')|title }}</span></td>
+                        <td>{{ user.employee_type|default('—')|title }}</td>
+                        <td>
+                            {% if user.employee_number %}
+                                {{ user.employee_number }}
+                            {% elif user.pm_code %}
+                                {{ user.pm_code }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td><a href="{{ url_for('users') }}?edit={{ user.id }}" class="btn-small">Edit</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <a href="{{ url_for('users') }}" class="btn">➕ Add New User</a>
+    </div>
+
+    <!-- Pending Queries -->
+    <div class="dashboard-section">
+        <h3><i class="fas fa-hourglass-half"></i> Pending Queries</h3>
+        <table class="data-table">
+            <thead><tr><th>Client</th><th>Location</th><th>Budget</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for inquiry in pending_inquiries[:8] %}
+                <tr>
+                    <td>{{ inquiry.client_name }}</td>
+                    <td>{{ inquiry.location[:30] }}</td>
+                    <td>R{{ "{:,.2f}".format(inquiry.budget|float) }}</td>
+                    <td>{{ inquiry.timestamp[:10] }}</td>
+                    <td>
+                        <a href="{{ url_for('view_inquiry_detail', inquiry_id=inquiry.id) }}" class="btn-small">View</a>
+                        <a href="{{ url_for('edit_inquiry', inquiry_id=inquiry.id) }}" class="btn-small btn-dark">Edit</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5">No pending queries.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Project Inquiries -->
+    <div class="dashboard-section">
+        <h3><i class="fas fa-question-circle"></i> Recent Project Inquiries</h3>
+        <table class="data-table">
+            <thead><tr><th>Client</th><th>Location</th><th>Budget</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>
+                {% for inquiry in inquiries[:5] %}
+                <tr>
+                    <td>{{ inquiry.client_name }}</td>
+                    <td>{{ inquiry.location[:30] }}</td>
+                    <td>R{{ "{:,.2f}".format(inquiry.budget|float) }}</td>
+                    <td><span class="status-badge">{{ inquiry.status }}</span></td>
+                    <td>{{ inquiry.timestamp[:10] }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5">No inquiries recorded yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Site Surveys -->
+    <div class="dashboard-section">
+        <h3><i class="fas fa-map-marked-alt"></i> Recent Site Surveys</h3>
+        <table class="data-table">
+            <thead><tr><th>Location</th><th>Submitted By</th><th>Risk Impact</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>
+                {% for survey in site_surveys[:5] %}
+                <tr>
+                    <td>{{ survey.location[:30] }}</td>
+                    <td>{{ survey.submitted_by or survey.user_id }}</td>
+                    <td><span class="risk-{{ survey.risk_impact }}">{{ survey.risk_impact|title }}</span></td>
+                    <td>{{ survey.status }}</td>
+                    <td>{{ survey.created_at[:10] }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5">No surveys recorded yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Safety Audits -->
+    <div class="dashboard-section">
+        <h3><i class="fas fa-shield-alt"></i> Recent Safety Audits</h3>
+        <table class="data-table">
+            <thead><tr><th>Site</th><th>Auditor</th><th>Overall Risk</th><th>Conclusion</th><th>Date</th></tr></thead>
+            <tbody>
+                {% for audit in safety_audits[:5] %}
+                <tr>
+                    <td>{{ audit.site_location[:30] }}</td>
+                    <td>{{ audit.auditor }}</td>
+                    <td><span class="risk-{{ audit.overall_risk }}">{{ audit.overall_risk|title }}</span></td>
+                    <td>{{ audit.audit_conclusion|title }}</td>
+                    <td>{{ audit.created_at[:10] }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5">No safety audits recorded yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .dashboard-container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 1.2rem; margin: 2rem 0; }
+    .stat-card { background: #f8f9fa; border-radius: 20px; padding: 1.2rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: 0.2s; }
+    .stat-card:hover { transform: translateY(-3px); }
+    .stat-card i { font-size: 2rem; color: #e67e22; }
+    .stat-card h3 { margin: 0.5rem 0; font-size: 1.8rem; }
+    .dashboard-section { background: white; border-radius: 24px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .table-responsive { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #eee; }
+    .role-badge { padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; color: white; }
+    .role-badge.admin { background: #e67e22; }
+    .role-badge.project_manager { background: #3498db; }
+    .role-badge.client { background: #2ecc71; }
+    .role-badge.employee { background: #9b59b6; }
+    .status-badge { background: #f39c12; padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; color: white; }
+    .risk-low { color: #27ae60; font-weight: bold; }
+    .risk-medium { color: #f39c12; font-weight: bold; }
+    .risk-high { color: #e74c3c; font-weight: bold; }
+    .risk-critical { color: #c0392b; font-weight: bold; }
+    .btn-small { background: #e67e22; color: white; padding: 4px 12px; border-radius: 20px; text-decoration: none; font-size: 0.8rem; display: inline-block; }
+    .btn-dark { background: #34495e; }
+    .btn { background: #e67e22; color: white; padding: 8px 16px; border-radius: 30px; text-decoration: none; display: inline-block; margin-top: 1rem; }
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2,1fr); }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="inquiries-container">
+    <h2><i class="fas fa-clipboard-list"></i> All Project Inquiries</h2>
+    <p>View and manage client project requests.</p>
+    <div class="dashboard-section">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Client Name</th>
+                        <th>Client Email</th>
+                        <th>Project Type</th>
+                        <th>Project Scope</th>
+                        <th>Location</th>
+                        <th>Budget (ZAR)</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inquiry in inquiries %}
+                    <tr>
+                        <td>{{ inquiry.timestamp[:10] }}</td>
+                        <td>{{ inquiry.client_name }}</td>
+                        <td>{{ inquiry.client_email }}</td>
+                        <td>{{ inquiry.project_type|default('—', true)|replace('_', ' ')|title }}</td>
+                        <td>{{ inquiry.project_scope[:60] }}{% if inquiry.project_scope|length > 60 %}...{% endif %}</td>
+                        <td>{{ inquiry.location }}</td>
+                        <td>R{{ "{:,.2f}".format(inquiry.budget|float) }}</td>
+                        <td>{{ inquiry.deadline }}</td>
+                        <td><span class="status-badge {{ inquiry.status }}">{{ inquiry.status|replace('_', ' ')|title }}</span></td>
+                        <td class="actions-cell">
+                            <a href="{{ url_for('view_inquiry_detail', inquiry_id=inquiry.id) }}" class="btn-small">View</a>
+                            <a href="{{ url_for('edit_inquiry', inquiry_id=inquiry.id) }}" class="btn-small btn-edit">Edit</a>
+                            {% if inquiry.status == 'pending_review' %}
+                                <a href="{{ url_for('approve_inquiry', inquiry_id=inquiry.id) }}" class="btn-small btn-approve" onclick="return confirm('Approve this inquiry?')">Approve</a>
+                                <a href="{{ url_for('reject_inquiry', inquiry_id=inquiry.id) }}" class="btn-small btn-reject" onclick="return confirm('Reject this inquiry?')">Reject</a>
+                            {% elif inquiry.status == 'approved' %}
+                                <a href="{{ url_for('agreement', prefill_inquiry=inquiry.id) }}" class="btn-small btn-agreement">Create Agreement</a>
+                                {% if inquiry.client_phone %}
+                                    <button class="btn-small btn-sms" onclick="showSmsModal('{{ inquiry.id }}', '{{ inquiry.client_phone }}')">Send SMS</button>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- SMS Modal -->
+<div id="smsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeSmsModal()">&times;</span>
+        <h3>Send SMS to Client</h3>
+        <form id="smsForm" method="POST" action="">
+            <div class="form-group">
+                <label>Phone Number:</label>
+                <input type="text" id="smsPhone" name="phone_number" readonly>
+            </div>
+            <div class="form-group">
+                <label>Message:</label>
+                <textarea name="message" rows="3" required placeholder="Enter your message..."></textarea>
+            </div>
+            <button type="submit" class="btn-sms">Send SMS</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .inquiries-container { max-width: 1300px; margin: 0 auto; }
+    .dashboard-section { background: white; border-radius: 24px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .table-responsive { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #eee; }
+    .status-badge { background: #f39c12; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; color: white; }
+    .status-badge.approved { background: #27ae60; }
+    .status-badge.rejected { background: #e74c3c; }
+    .actions-cell { white-space: nowrap; }
+    .btn-small { background: #e67e22; color: white; padding: 4px 12px; border-radius: 20px; text-decoration: none; font-size: 0.75rem; display: inline-block; margin-right: 5px; border: none; cursor: pointer; }
+    .btn-approve { background: #27ae60; }
+    .btn-edit { background: #34495e; }
+    .btn-reject { background: #e74c3c; }
+    .btn-agreement { background: #e67e22; }
+    .btn-sms { background: #3498db; color: white; }
+    .modal { position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; }
+    .modal-content { background: white; padding: 2rem; border-radius: 24px; max-width: 500px; width: 90%; }
+    .close { float: right; font-size: 28px; cursor: pointer; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.3rem; font-weight: bold; }
+    .form-group input, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; }
+    @media (max-width: 700px) {
+        .actions-cell { white-space: normal; }
+        .btn-small { margin-bottom: 5px; }
+    }
+</style>
+
+<script>
+    function showSmsModal(inquiryId, phoneNumber) {
+        const modal = document.getElementById('smsModal');
+        const form = document.getElementById('smsForm');
+        form.action = "/send_sms/" + inquiryId;
+        document.getElementById('smsPhone').value = phoneNumber;
+        modal.style.display = 'flex';
+    }
+    function closeSmsModal() {
+        document.getElementById('smsModal').style.display = 'none';
+    }
+    window.onclick = function(event) {
+        const modal = document.getElementById('smsModal');
+        if (event.target == modal) closeSmsModal();
+    }
+</script>
+{% endblock %}

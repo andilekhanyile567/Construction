@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="team-container">
+    <h2>👥 Match Internal Team & Resources</h2>
+    <p class="subtitle">Allocate personnel, machinery, and calendar slots for the project</p>
+
+    <form method="POST" enctype="multipart/form-data" class="team-form">
+        <!-- STEP 1: Query availability -->
+        <div class="form-step">
+            <div class="step-header">
+                <span class="step-number">1</span>
+                <h3>Query availability of managers & specialized crews</h3>
+            </div>
+            <div class="step-content">
+                <div class="form-group">
+                    <label>Projected start date <span class="required">*</span></label>
+                    <input type="date" name="start_date" required>
+                </div>
+                <div class="form-group">
+                    <label>Projected end date</label>
+                    <input type="date" name="end_date">
+                </div>
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Select available managers</label>
+                        <select name="managers" multiple size="3">
+                            <option value="John Smith (Site Manager)">John Smith (Site Manager)</option>
+                            <option value="Sarah Lee (Project Manager)">Sarah Lee (Project Manager)</option>
+                            <option value="Mike Chen (Safety Manager)">Mike Chen (Safety Manager)</option>
+                            <option value="Anna K (QA/QC Manager)">Anna K (QA/QC Manager)</option>
+                        </select>
+                        <small>Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+                    <div class="form-group half">
+                        <label>Specialized crews needed</label>
+                        <select name="crews" multiple size="3">
+                            <option value="Excavation crew">Excavation crew</option>
+                            <option value="Concrete finishing crew">Concrete finishing crew</option>
+                            <option value="Electrical team">Electrical team</option>
+                            <option value="Plumbing team">Plumbing team</option>
+                            <option value="Steel fixers">Steel fixers</option>
+                        </select>
+                        <small>Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Additional notes on availability</label>
+                    <textarea name="availability_notes" rows="2" placeholder="Any constraints, shift preferences, or special requests"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Check machinery schedule -->
+        <div class="form-step">
+            <div class="step-header">
+                <span class="step-number">2</span>
+                <h3>Check machinery schedule & availability</h3>
+            </div>
+            <div class="step-content">
+                <div class="form-group">
+                    <label>Required machinery / equipment</label>
+                    <textarea name="machinery_list" rows="3" placeholder="e.g., Excavator (30t) – 2 units, Concrete pump – 1 unit, Tower crane – 1 unit, Dump trucks – 4 units"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Planned usage date</label>
+                        <input type="date" name="machinery_date">
+                    </div>
+                    <div class="form-group half">
+                        <label>Duration (days)</label>
+                        <input type="number" name="machinery_duration" step="0.5" placeholder="e.g., 5">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Schedule conflicts or remarks</label>
+                    <input type="text" name="machinery_conflicts" placeholder="Any known overlapping projects or maintenance">
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Assign personnel based on skill & location -->
+        <div class="form-step">
+            <div class="step-header">
+                <span class="step-number">3</span>
+                <h3>Assign personnel (skill rating & location)</h3>
+            </div>
+            <div class="step-content">
+                <div class="form-group">
+                    <label>Role / Position to fill</label>
+                    <input type="text" name="role" placeholder="e.g., Lead Electrician, Senior Carpenter">
+                </div>
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Minimum skill rating (1-5)</label>
+                        <select name="skill_rating">
+                            <option value="1">1 - Basic</option>
+                            <option value="2">2 - Intermediate</option>
+                            <option value="3">3 - Advanced</option>
+                            <option value="4">4 - Expert</option>
+                            <option value="5">5 - Master</option>
+                        </select>
+                    </div>
+                    <div class="form-group half">
+                        <label>Preferred location / site proximity</label>
+                        <input type="text" name="location" placeholder="e.g., North zone, within 20km">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Assigned personnel (optional – list names or IDs)</label>
+                    <textarea name="assigned_workers" rows="2" placeholder="You can later update this with actual names"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4: Reserve resources in company calendar -->
+        <div class="form-step">
+            <div class="step-header">
+                <span class="step-number">4</span>
+                <h3>Reserve resources in company calendar</h3>
+            </div>
+            <div class="step-content">
+                <div class="form-group">
+                    <label>Resource type to reserve</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="reserve_managers" value="yes"> Managers & supervisors</label>
+                        <label><input type="checkbox" name="reserve_crews" value="yes"> Specialized crews</label>
+                        <label><input type="checkbox" name="reserve_machinery" value="yes"> Machinery & equipment</label>
+                        <label><input type="checkbox" name="reserve_vehicles" value="yes"> Site vehicles</label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Calendar start date</label>
+                        <input type="date" name="calendar_start" required>
+                    </div>
+                    <div class="form-group half">
+                        <label>Calendar end date</label>
+                        <input type="date" name="calendar_end">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Booking reference / event name</label>
+                    <input type="text" name="event_name" placeholder="e.g., 'Project Alpha – Excavation phase'">
+                </div>
+                <div class="form-group">
+                    <label>Additional calendar notes</label>
+                    <textarea name="calendar_notes" rows="2" placeholder="Any special instructions for the calendar entry"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit button -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-calendar-check"></i> Reserve & Assign Resources
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .team-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        background: #fff;
+        border-radius: 28px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+        padding: 2rem;
+    }
+    .subtitle {
+        color: #666;
+        margin-bottom: 2rem;
+        border-left: 4px solid #e67e22;
+        padding-left: 1rem;
+    }
+    .form-step {
+        margin-bottom: 2.5rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 1.5rem;
+    }
+    .step-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.2rem;
+    }
+    .step-number {
+        background: #e67e22;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    .step-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+    }
+    .required {
+        color: #e67e22;
+    }
+    input, textarea, select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-family: inherit;
+        transition: 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
+        border-color: #e67e22;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+    }
+    .form-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .half {
+        flex: 1;
+        min-width: 180px;
+    }
+    .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 0.3rem;
+    }
+    .checkbox-group label {
+        font-weight: normal;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .checkbox-group input {
+        width: auto;
+    }
+    small {
+        display: block;
+        color: #888;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    .form-actions {
+        margin-top: 2rem;
+        text-align: center;
+    }
+    .btn-primary {
+        background: #e67e22;
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        font-size: 1rem;
+        font-weight: bold;
+        border-radius: 40px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-primary:hover {
+        background: #f39c12;
+        transform: translateY(-2px);
+    }
+    @media (max-width: 700px) {
+        .team-container { padding: 1rem; }
+        .form-row { flex-direction: column; }
+        .step-number { width: 28px; height: 28px; font-size: 0.8rem; }
+    }
+</style>
+{% endblock %}
